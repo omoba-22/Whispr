@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Whispr — say it anonymously</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --border: #1e1e2e;
+      --text: #e8e8f0;
+      --muted: #6b6b80;
+      --accent: #7c3aed;
+      --accent-light: #a78bfa;
+
+      --mood-vent: #ef4444;
+      --mood-nocap: #8b5cf6;
+      --mood-feels: #ec4899;
+      --mood-hottake: #f97316;
+      --mood-tea: #06b6d4;
+
+      --bottom-nav-h: 64px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* TOP NAV — desktop only */
+    nav.top-nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 2rem;
+      background: rgba(10,10,15,0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem;
+      color: var(--text); letter-spacing: -0.03em; cursor: pointer;
+    }
+    .logo span { color: var(--accent); }
+    .top-nav .nav-links { display: flex; gap: 0.6rem; align-items: center; }
+
+    /* BOTTOM NAV — mobile only */
+    nav.bottom-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: var(--bottom-nav-h);
+      background: rgba(10,10,15,0.96);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      z-index: 200;
+      padding: 0 0.5rem;
+      align-items: stretch;
+      justify-content: space-around;
+    }
+
+    .bottom-nav-item {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; padding: 0 0.75rem;
+      cursor: pointer;
+      color: var(--muted);
+      font-size: 0.65rem; font-weight: 500;
+      transition: color 0.2s; flex: 1;
+      border: none; background: transparent;
+      font-family: 'DM Sans', sans-serif;
+    }
+    .bottom-nav-item svg {
+      width: 21px; height: 21px;
+      stroke: currentColor; fill: none;
+      stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .bottom-nav-item.active { color: var(--accent-light); }
+    .bottom-nav-item:hover  { color: var(--text); }
+
+    /* Centre send FAB */
+    .bottom-nav-item.fab-btn { position: relative; top: -10px; }
+    .fab-inner {
+      width: 46px; height: 46px;
+      background: var(--accent); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 18px rgba(124,58,237,0.5);
+      margin-bottom: 1px;
+    }
+    .fab-inner svg { stroke: white; width: 19px; height: 19px; }
+
+    /* BUTTONS */
+    .btn {
+      padding: 0.5rem 1.1rem; border-radius: 999px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem; font-weight: 500;
+      cursor: pointer; border: none; transition: all 0.2s; white-space: nowrap;
+    }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #6d28d9; transform: translateY(-1px); }
+    .btn-lg { padding: 0.72rem 1.5rem; font-size: 0.9rem; }
+
+    /* PAGES */
+    .page { display: none; padding: 1.5rem 1.5rem 2rem; max-width: 680px; margin: 0 auto; position: relative; z-index: 1; }
+    .page.active { display: block; }
+
+    /* HERO */
+    .hero { text-align: center; padding: 2.5rem 1rem 2rem; }
+    .hero-tag {
+      display: inline-block;
+      background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3);
+      color: var(--accent-light); font-size: 0.72rem; font-weight: 500;
+      padding: 0.28rem 0.85rem; border-radius: 999px; margin-bottom: 1rem;
+      letter-spacing: 0.06em; text-transform: uppercase;
+    }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 6vw, 3.2rem); font-weight: 800;
+      line-height: 1.1; letter-spacing: -0.03em; margin-bottom: 0.9rem;
+    }
+    .hero h1 em { font-style: normal; color: var(--accent); }
+    .hero p { color: var(--muted); font-size: 0.93rem; max-width: 400px; margin: 0 auto 1.8rem; line-height: 1.65; }
+    .hero-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+
+    /* FEED */
+    .feed-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; flex-wrap: wrap; gap: 0.6rem; }
+    .feed-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+    .mood-filters { display: flex; gap: 0.3rem; flex-wrap: wrap; }
+    .mood-chip {
+      padding: 0.26rem 0.65rem; border-radius: 999px; font-size: 0.68rem; font-weight: 500;
+      cursor: pointer; border: 1px solid transparent; transition: all 0.2s;
+      background: var(--surface); color: var(--muted);
+    }
+    .mood-chip:hover { color: var(--text); }
+    .mood-chip[data-mood="all"].active        { border-color: var(--accent);       color: var(--accent-light); background: rgba(124,58,237,0.1); }
+    .mood-chip[data-mood="😤 Vent"].active    { border-color: var(--mood-vent);    color: var(--mood-vent);    background: rgba(239,68,68,0.1); }
+    .mood-chip[data-mood="💀 No Cap"].active  { border-color: var(--mood-nocap);   color: var(--mood-nocap);   background: rgba(139,92,246,0.1); }
+    .mood-chip[data-mood="🥺 Feels"].active   { border-color: var(--mood-feels);   color: var(--mood-feels);   background: rgba(236,72,153,0.1); }
+    .mood-chip[data-mood="🔥 Hot Take"].active{ border-color: var(--mood-hottake); color: var(--mood-hottake); background: rgba(249,115,22,0.1); }
+    .mood-chip[data-mood="👀 Tea"].active     { border-color: var(--mood-tea);     color: var(--mood-tea);     background: rgba(6,182,212,0.1); }
+
+    /* MESSAGE CARDS */
+    .messages-grid { display: flex; flex-direction: column; gap: 0.8rem; }
+    .msg-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 1rem 1.1rem;
+      position: relative; overflow: hidden;
+      animation: fadeUp 0.35s ease both;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .msg-card:hover { transform: translateY(-2px); }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .msg-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+    .msg-card[data-mood="😤 Vent"]::before     { background: var(--mood-vent); }
+    .msg-card[data-mood="💀 No Cap"]::before   { background: var(--mood-nocap); }
+    .msg-card[data-mood="🥺 Feels"]::before    { background: var(--mood-feels); }
+    .msg-card[data-mood="🔥 Hot Take"]::before { background: var(--mood-hottake); }
+    .msg-card[data-mood="👀 Tea"]::before      { background: var(--mood-tea); }
+    .msg-card[data-mood="😤 Vent"]:hover     { border-color: rgba(239,68,68,0.3); }
+    .msg-card[data-mood="💀 No Cap"]:hover   { border-color: rgba(139,92,246,0.3); }
+    .msg-card[data-mood="🥺 Feels"]:hover    { border-color: rgba(236,72,153,0.3); }
+    .msg-card[data-mood="🔥 Hot Take"]:hover { border-color: rgba(249,115,22,0.3); }
+    .msg-card[data-mood="👀 Tea"]:hover      { border-color: rgba(6,182,212,0.3); }
+
+    .msg-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.45rem; }
+    .mood-badge { font-size: 0.66rem; font-weight: 500; padding: 0.16rem 0.5rem; border-radius: 999px; }
+    .mood-badge[data-mood="😤 Vent"]     { background: rgba(239,68,68,0.15);  color: var(--mood-vent); }
+    .mood-badge[data-mood="💀 No Cap"]   { background: rgba(139,92,246,0.15); color: var(--mood-nocap); }
+    .mood-badge[data-mood="🥺 Feels"]    { background: rgba(236,72,153,0.15); color: var(--mood-feels); }
+    .mood-badge[data-mood="🔥 Hot Take"] { background: rgba(249,115,22,0.15); color: var(--mood-hottake); }
+    .mood-badge[data-mood="👀 Tea"]      { background: rgba(6,182,212,0.15);  color: var(--mood-tea); }
+    .msg-time { font-size: 0.66rem; color: var(--muted); }
+    .msg-text { font-size: 0.9rem; line-height: 1.6; color: var(--text); }
+    .msg-recipient { margin-top: 0.45rem; font-size: 0.7rem; color: var(--muted); }
+    .msg-recipient span { color: var(--accent); font-weight: 500; }
+
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--muted); }
+    .empty-state .emoji { font-size: 2.2rem; margin-bottom: 0.6rem; }
+    .empty-state p { font-size: 0.86rem; }
+
+    /* SEND PAGE */
+    .send-hero { text-align: center; padding: 1.5rem 1rem 1.1rem; }
+    .send-hero h2 { font-family: 'Syne', sans-serif; font-size: 1.55rem; font-weight: 800; margin-bottom: 0.3rem; }
+    .send-hero p { color: var(--muted); font-size: 0.86rem; }
+    .recipient-tag {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3);
+      color: var(--accent-light); padding: 0.26rem 0.8rem;
+      border-radius: 999px; font-size: 0.76rem; font-weight: 500; margin-bottom: 0.85rem;
+    }
+
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem; }
+    .form-label { font-size: 0.7rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; display: block; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group:last-child { margin-bottom: 0; }
+
+    textarea {
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem; padding: 0.8rem 0.9rem; resize: none; min-height: 108px;
+      transition: border-color 0.2s; outline: none;
+    }
+    textarea:focus { border-color: var(--accent); }
+    textarea::placeholder { color: var(--muted); }
+    .char-count { font-size: 0.66rem; color: var(--muted); text-align: right; margin-top: 0.26rem; }
+
+    .mood-selector { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+    .mood-option {
+      padding: 0.38rem 0.75rem; border-radius: 999px; font-size: 0.74rem; font-weight: 500;
+      cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--muted); transition: all 0.2s;
+    }
+    .mood-option:hover { color: var(--text); }
+    .mood-option.selected[data-mood="😤 Vent"]     { background: rgba(239,68,68,0.15);  border-color: var(--mood-vent);    color: var(--mood-vent); }
+    .mood-option.selected[data-mood="💀 No Cap"]   { background: rgba(139,92,246,0.15); border-color: var(--mood-nocap);   color: var(--mood-nocap); }
+    .mood-option.selected[data-mood="🥺 Feels"]    { background: rgba(236,72,153,0.15); border-color: var(--mood-feels);   color: var(--mood-feels); }
+    .mood-option.selected[data-mood="🔥 Hot Take"] { background: rgba(249,115,22,0.15); border-color: var(--mood-hottake); color: var(--mood-hottake); }
+    .mood-option.selected[data-mood="👀 Tea"]      { background: rgba(6,182,212,0.15);  border-color: var(--mood-tea);     color: var(--mood-tea); }
+
+    .public-toggle {
+      display: flex; align-items: center; gap: 0.7rem;
+      padding: 0.65rem 0.85rem; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 10px; cursor: pointer; user-select: none;
+    }
+    .toggle-switch { width: 33px; height: 18px; background: var(--border); border-radius: 999px; position: relative; transition: background 0.2s; flex-shrink: 0; }
+    .toggle-switch::after { content: ''; position: absolute; width: 12px; height: 12px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
+    .toggle-switch.on { background: var(--accent); }
+    .toggle-switch.on::after { left: 18px; }
+    .toggle-label { font-size: 0.8rem; color: var(--muted); }
+    .toggle-label strong { color: var(--text); display: block; font-size: 0.84rem; }
+
+    .send-btn {
+      width: 100%; padding: 0.82rem; border-radius: 10px;
+      font-size: 0.92rem; font-weight: 700; background: var(--accent);
+      color: white; border: none; cursor: pointer;
+      font-family: 'Syne', sans-serif; letter-spacing: 0.02em;
+      transition: all 0.2s; margin-top: 0.55rem;
+    }
+    .send-btn:hover:not(:disabled) { background: #6d28d9; transform: translateY(-1px); }
+    .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* CREATE LINK */
+    .create-form { max-width: 500px; margin: 1.5rem auto; }
+    .create-form h2 { font-family: 'Syne', sans-serif; font-size: 1.65rem; font-weight: 800; margin-bottom: 0.35rem; }
+    .create-form > p { color: var(--muted); font-size: 0.86rem; margin-bottom: 1.6rem; line-height: 1.65; }
+
+    input[type="text"] {
+      width: 100%; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem; padding: 0.78rem 0.9rem; outline: none; transition: border-color 0.2s;
+    }
+    input[type="text"]:focus { border-color: var(--accent); }
+    input[type="text"]::placeholder { color: var(--muted); }
+
+    .input-prefix {
+      display: flex; align-items: center; background: var(--surface);
+      border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color 0.2s;
+    }
+    .input-prefix:focus-within { border-color: var(--accent); }
+    .prefix-label { padding: 0.78rem 0.7rem 0.78rem 0.9rem; color: var(--muted); font-size: 0.8rem; white-space: nowrap; border-right: 1px solid var(--border); }
+    .input-prefix input { border: none; border-radius: 0; background: transparent; }
+    .input-prefix input:focus { border-color: transparent; }
+    .hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem; }
+
+    /* SHARE CARD */
+    .share-card {
+      background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(6,182,212,0.08));
+      border: 1px solid rgba(124,58,237,0.25); border-radius: 14px; padding: 1.1rem; margin-bottom: 0.9rem;
+    }
+    .share-card h3 { font-family: 'Syne', sans-serif; font-size: 0.9rem; font-weight: 700; margin-bottom: 0.6rem; }
+    .link-box { display: flex; gap: 0.4rem; align-items: center; }
+    .link-display {
+      flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 0.55rem 0.8rem; font-size: 0.76rem; color: var(--muted);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .copy-btn { padding: 0.55rem 0.85rem; border-radius: 8px; background: var(--accent); color: white; border: none; font-size: 0.74rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all 0.2s; }
+    .copy-btn:hover { background: #6d28d9; }
+
+    /* INBOX */
+    .view-inbox-form { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.3rem; margin: 1.2rem auto; max-width: 460px; }
+    .view-inbox-form h3 { font-family: 'Syne', sans-serif; font-weight: 700; margin-bottom: 0.35rem; font-size: 1.15rem; }
+    .view-inbox-form > p { color: var(--muted); font-size: 0.82rem; margin-bottom: 1rem; }
+    .inbox-header { display: flex; align-items: center; gap: 0.7rem; margin-bottom: 1.1rem; flex-wrap: wrap; }
+    .inbox-title { font-family: 'Syne', sans-serif; font-size: 1.25rem; font-weight: 800; }
+    .inbox-count { background: var(--accent); color: white; font-size: 0.66rem; font-weight: 700; padding: 0.16rem 0.5rem; border-radius: 999px; }
+
+    /* SUCCESS */
+    .success-msg { text-align: center; padding: 2.5rem 1rem; animation: fadeUp 0.4s ease; }
+    .success-msg .big-emoji { font-size: 2.8rem; margin-bottom: 0.6rem; }
+    .success-msg h3 { font-family: 'Syne', sans-serif; font-size: 1.35rem; font-weight: 800; margin-bottom: 0.3rem; }
+    .success-msg p { color: var(--muted); font-size: 0.86rem; }
+
+    /* TOAST */
+    .toast {
+      position: fixed; bottom: 1.5rem; left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #1e1e2e; border: 1px solid var(--border);
+      color: var(--text); padding: 0.6rem 1.1rem; border-radius: 999px;
+      font-size: 0.8rem; font-weight: 500; z-index: 999;
+      transition: transform 0.3s ease; white-space: nowrap; pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* LOADING */
+    .loading { display: flex; gap: 0.35rem; justify-content: center; padding: 2rem; }
+    .loading span { width: 7px; height: 7px; background: var(--accent); border-radius: 50%; animation: bounce 1.2s infinite; }
+    .loading span:nth-child(2) { animation-delay: 0.2s; }
+    .loading span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+      40%            { transform: scale(1);   opacity: 1; }
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav.top-nav    { display: none; }
+      nav.bottom-nav { display: flex; }
+      body { padding-bottom: var(--bottom-nav-h); }
+
+      .page { padding: 0.9rem 0.9rem 1.2rem; }
+      .hero { padding: 1.2rem 0.25rem 1rem; }
+      .hero h1 { font-size: 1.75rem; }
+      .feed-header { flex-direction: column; align-items: flex-start; }
+      .mood-filters { gap: 0.22rem; }
+      .toast { bottom: calc(var(--bottom-nav-h) + 0.6rem); }
+    }
+
+    @media (min-width: 641px) {
+      nav.top-nav    { display: flex; }
+      nav.bottom-nav { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP NAV (desktop) -->
+<nav class="top-nav">
+  <div class="logo" onclick="showPage('home')">Whisp<span>r</span></div>
+  <div class="nav-links">
+    <button class="btn btn-ghost" onclick="showPage('home')">Feed</button>
+    <button class="btn btn-ghost" onclick="showPage('create')">My Link</button>
+    <button class="btn btn-ghost" onclick="showPage('send')">Send</button>
+    <button class="btn btn-primary" onclick="showPage('inbox')">Inbox</button>
+  </div>
+</nav>
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="bottom-nav-item active" id="bnav-home" onclick="showPage('home')">
+    <svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>
+    Feed
+  </button>
+  <button class="bottom-nav-item fab-btn" id="bnav-send" onclick="showPage('send')">
+    <div class="fab-inner">
+      <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+    </div>
+    Send
+  </button>
+  <button class="bottom-nav-item" id="bnav-create" onclick="showPage('create')">
+    <svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>
+    My Link
+  </button>
+  <button class="bottom-nav-item" id="bnav-inbox" onclick="showPage('inbox')">
+    <svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>
+    Inbox
+  </button>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-tag">✦ anonymous vibes only</div>
+    <h1>Say what you <em>actually</em> feel.</h1>
+    <p>Drop anonymous messages into the void. No names, no judgment — just raw, honest energy.</p>
+    <div class="hero-actions">
+      <button class="btn btn-primary btn-lg" onclick="showPage('create')">Get my link</button>
+      <button class="btn btn-ghost btn-lg" onclick="showPage('send')">Send a message</button>
+    </div>
+  </div>
+
+  <div class="feed-header">
+    <div class="feed-title">Live feed</div>
+    <div class="mood-filters">
+      <div class="mood-chip active" data-mood="all"         onclick="filterMood('all',this)">All</div>
+      <div class="mood-chip" data-mood="😤 Vent"        onclick="filterMood('😤 Vent',this)">😤 Vent</div>
+      <div class="mood-chip" data-mood="💀 No Cap"      onclick="filterMood('💀 No Cap',this)">💀 No Cap</div>
+      <div class="mood-chip" data-mood="🥺 Feels"       onclick="filterMood('🥺 Feels',this)">🥺 Feels</div>
+      <div class="mood-chip" data-mood="🔥 Hot Take"    onclick="filterMood('🔥 Hot Take',this)">🔥 Hot Take</div>
+      <div class="mood-chip" data-mood="👀 Tea"         onclick="filterMood('👀 Tea',this)">👀 Tea</div>
+    </div>
+  </div>
+
+  <div id="feed-container">
+    <div class="loading"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<!-- SEND -->
+<div class="page" id="page-send">
+  <div class="send-hero">
+    <div id="send-recipient-tag" class="recipient-tag" style="display:none"></div>
+    <h2>Drop a message</h2>
+    <p id="send-subtitle">It's anonymous. They'll never know it's you.</p>
+  </div>
+
+  <div id="send-form-area">
+    <div class="form-card" id="recipient-section" style="display:none; margin-bottom:0.8rem;">
+      <label class="form-label">Send to (username)</label>
+      <input type="text" id="to-username" placeholder="e.g. josh" />
+    </div>
+
+    <div class="form-card">
+      <div class="form-group">
+        <label class="form-label">Your message</label>
+        <textarea id="msg-text" maxlength="300" placeholder="type something real..." oninput="updateCount(this)"></textarea>
+        <div class="char-count"><span id="char-count">0</span>/300</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Pick a vibe</label>
+        <div class="mood-selector">
+          <div class="mood-option" data-mood="😤 Vent"        onclick="selectMood(this)">😤 Vent</div>
+          <div class="mood-option" data-mood="💀 No Cap"      onclick="selectMood(this)">💀 No Cap</div>
+          <div class="mood-option" data-mood="🥺 Feels"       onclick="selectMood(this)">🥺 Feels</div>
+          <div class="mood-option" data-mood="🔥 Hot Take"    onclick="selectMood(this)">🔥 Hot Take</div>
+          <div class="mood-option" data-mood="👀 Tea"         onclick="selectMood(this)">👀 Tea</div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="public-toggle" onclick="togglePublic()">
+          <div class="toggle-switch on" id="public-toggle-switch"></div>
+          <div class="toggle-label">
+            <strong>Show on public feed</strong>
+            Still 100% anonymous
+          </div>
+        </div>
+      </div>
+
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">Send anonymously ✦</button>
+    </div>
+  </div>
+
+  <div id="send-success" style="display:none">
+    <div class="success-msg">
+      <div class="big-emoji">👻</div>
+      <h3>Message sent!</h3>
+      <p>They have no idea who you are. 👀</p>
+      <br>
+      <button class="btn btn-primary btn-lg" onclick="resetSend()">Send another</button>
+    </div>
+  </div>
+</div>
+
+<!-- CREATE LINK -->
+<div class="page" id="page-create">
+  <div class="create-form">
+    <h2>Get your link ✦</h2>
+    <p>Pick a username and share your link. People send you anonymous messages — you read them in your inbox.</p>
+
+    <div class="form-group">
+      <label class="form-label">Choose a username</label>
+      <div class="input-prefix">
+        <div class="prefix-label">whispr.to/</div>
+        <input type="text" id="username-input" placeholder="yourname" maxlength="30" />
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Secret inbox code</label>
+      <input type="text" id="secret-input" placeholder="make it memorable" maxlength="30" />
+      <div class="hint">⚠️ Save this — you'll need it to open your inbox. We never store it.</div>
+    </div>
+
+    <button class="send-btn" onclick="createLink()">Generate my link</button>
+
+    <div id="link-result" style="display:none; margin-top:1.2rem;">
+      <div class="share-card">
+        <h3>🔗 Your Whispr link</h3>
+        <div class="link-box">
+          <div class="link-display" id="link-display"></div>
+          <button class="copy-btn" onclick="copyLink()">Copy</button>
+        </div>
+        <div class="hint" style="margin-top:0.55rem;">Share this with anyone. Messages go straight to your inbox.</div>
+      </div>
+      <button class="btn btn-primary btn-lg" style="width:100%; margin-top:0.7rem;" onclick="goToInbox()">View my inbox →</button>
+    </div>
+  </div>
+</div>
+
+<!-- INBOX -->
+<div class="page" id="page-inbox">
+  <div id="inbox-login" class="view-inbox-form">
+    <h3>View your inbox</h3>
+    <p>Enter your username and secret code to see your messages.</p>
+    <div class="form-group">
+      <label class="form-label">Username</label>
+      <input type="text" id="inbox-username" placeholder="yourname" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Secret code</label>
+      <input type="text" id="inbox-secret" placeholder="your secret code" />
+    </div>
+    <button class="send-btn" onclick="viewInbox()">Open inbox</button>
+  </div>
+
+  <div id="inbox-messages" style="display:none">
+    <div class="share-card" style="margin-bottom:1.1rem;">
+      <h3>🔗 Share your link</h3>
+      <div class="link-box">
+        <div class="link-display" id="inbox-link-display"></div>
+        <button class="copy-btn" onclick="copyInboxLink()">Copy</button>
+      </div>
+    </div>
+    <div class="inbox-header">
+      <div class="inbox-title" id="inbox-title"></div>
+      <div class="inbox-count" id="inbox-count"></div>
+    </div>
+    <div id="inbox-container"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* CONFIG */
+  const SUPABASE_URL = 'https://scczitcxqazohgbipogy.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_lfNQ4fzNs25bKpz5hQCGBA_pP2WfhZd';
+  const BASE_HEADERS = {
+    'Content-Type': 'application/json',
+    'apikey': SUPABASE_KEY,
+    'Authorization': `Bearer ${SUPABASE_KEY}`
+  };
+
+  /* STATE */
+  let selectedMood    = null;
+  let isPublic        = true;
+  let currentFilter   = 'all';
+  let currentUsername = null;
+  let currentSecret   = null;
+
+  /* UTILS */
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2600);
+  }
+
+  function timeAgo(dateStr) {
+    const diff = Date.now() - new Date(dateStr);
+    const m = Math.floor(diff / 60000);
+    if (m < 1)  return 'just now';
+    if (m < 60) return `${m}m ago`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h}h ago`;
+    return `${Math.floor(h / 24)}d ago`;
+  }
+
+  function escapeHTML(str) {
+    if (!str) return '';
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function buildLink(username) {
+    return `${window.location.origin}${window.location.pathname}?u=${encodeURIComponent(username)}`;
+  }
+
+  /* NAVIGATION */
+  const PAGES  = ['home','send','create','inbox'];
+  const BNAVS  = { home:'bnav-home', send:'bnav-send', create:'bnav-create', inbox:'bnav-inbox' };
+
+  function showPage(name) {
+    PAGES.forEach(id => document.getElementById('page-'+id).classList.toggle('active', id === name));
+    Object.entries(BNAVS).forEach(([page, btnId]) => {
+      document.getElementById(btnId)?.classList.toggle('active', page === name);
+    });
+    if (name === 'home') loadFeed();
+    window.scrollTo(0, 0);
+  }
+
+  /* URL PARAMS */
+  function checkURLParams() {
+    const u = new URLSearchParams(window.location.search).get('u');
+    if (u) {
+      window._recipientUsername = u;
+      showPage('send');
+      const tag = document.getElementById('send-recipient-tag');
+      tag.style.display = 'inline-flex';
+      tag.textContent = `✉️ Sending to @${u}`;
+      document.getElementById('send-subtitle').textContent = `@${u} will never know it was you.`;
+    } else {
+      document.getElementById('recipient-section').style.display = 'block';
+    }
+  }
+
+  /* FEED */
+  async function loadFeed() {
+    const container = document.getElementById('feed-container');
+    container.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
+
+    let url = `${SUPABASE_URL}/rest/v1/messages?is_public=eq.true&order=created_at.desc&limit=30`;
+    if (currentFilter !== 'all') url += `&mood=eq.${encodeURIComponent(currentFilter)}`;
+
+    try {
+      const res  = await fetch(url, { headers: BASE_HEADERS });
+      const data = await res.json();
+
+      if (!Array.isArray(data) || !data.length) {
+        container.innerHTML = `<div class="empty-state"><div class="emoji">👻</div><p>No messages yet. Be the first to drop something.</p></div>`;
+        return;
+      }
+      container.innerHTML = '<div class="messages-grid" id="feed-grid"></div>';
+      const grid = document.getElementById('feed-grid');
+      data.forEach((msg, i) => grid.innerHTML += renderCard(msg, i, false));
+    } catch (e) {
+      container.innerHTML = `<div class="empty-state"><div class="emoji">😵</div><p>Couldn't load messages.</p></div>`;
+    }
+  }
+
+  function renderCard(msg, i, inInbox) {
+    const delay = Math.min(i * 0.05, 0.4);
+    const recipientLine = (!inInbox && msg.recipient_username)
+      ? `<div class="msg-recipient">→ <span>@${escapeHTML(msg.recipient_username)}</span></div>` : '';
+    return `
+      <div class="msg-card" data-mood="${escapeHTML(msg.mood)}" style="animation-delay:${delay}s">
+        <div class="msg-top">
+          <div class="mood-badge" data-mood="${escapeHTML(msg.mood)}">${escapeHTML(msg.mood)}</div>
+          <div class="msg-time">${timeAgo(msg.created_at)}</div>
+        </div>
+        <div class="msg-text">${escapeHTML(msg.message)}</div>
+        ${recipientLine}
+      </div>`;
+  }
+
+  function filterMood(mood, el) {
+    currentFilter = mood;
+    document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    loadFeed();
+  }
+
+  /* SEND */
+  function updateCount(el) { document.getElementById('char-count').textContent = el.value.length; }
+
+  function selectMood(el) {
+    document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected');
+    selectedMood = el.dataset.mood;
+  }
+
+  function togglePublic() {
+    isPublic = !isPublic;
+    document.getElementById('public-toggle-switch').classList.toggle('on', isPublic);
+  }
+
+  async function sendMessage() {
+    const text      = document.getElementById('msg-text').value.trim();
+    const toEl      = document.getElementById('to-username');
+    const recipient = window._recipientUsername || (toEl ? toEl.value.trim() : '') || null;
+
+    if (!text)         return showToast('Write something first 👀');
+    if (!selectedMood) return showToast('Pick a vibe first!');
+
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true; btn.textContent = 'Sending...';
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+        method:  'POST',
+        headers: { ...BASE_HEADERS, 'Prefer': 'return=minimal' },
+        body:    JSON.stringify({ message: text, mood: selectedMood, is_public: isPublic, recipient_username: recipient })
+      });
+
+      if (res.ok) {
+        document.getElementById('send-form-area').style.display = 'none';
+        document.getElementById('send-success').style.display   = 'block';
+      } else {
+        const err = await res.text();
+        console.error('Supabase error:', res.status, err);
+        showToast(`Send failed (${res.status}) — see console`);
+        btn.disabled = false; btn.textContent = 'Send anonymously ✦';
+      }
+    } catch (e) {
+      console.error('Network error:', e);
+      showToast('Network error. Try again.');
+      btn.disabled = false; btn.textContent = 'Send anonymously ✦';
+    }
+  }
+
+  function resetSend() {
+    document.getElementById('msg-text').value = '';
+    document.getElementById('char-count').textContent = '0';
+    selectedMood = null; isPublic = true;
+    document.getElementById('public-toggle-switch').classList.add('on');
+    document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
+    document.getElementById('send-form-area').style.display = 'block';
+    document.getElementById('send-success').style.display   = 'none';
+    const btn = document.getElementById('send-btn');
+    btn.disabled = false; btn.textContent = 'Send anonymously ✦';
+  }
+
+  /* CREATE LINK */
+  function createLink() {
+    const username = document.getElementById('username-input').value.trim().toLowerCase().replace(/\s+/g,'');
+    const secret   = document.getElementById('secret-input').value.trim();
+    if (!username || username.length < 2) return showToast('Username too short!');
+    if (!secret) return showToast('Set a secret code!');
+    currentUsername = username; currentSecret = secret;
+    document.getElementById('link-display').textContent = buildLink(username);
+    document.getElementById('link-result').style.display = 'block';
+    showToast('Link created! 🔥');
+  }
+
+  function copyLink() {
+    navigator.clipboard.writeText(document.getElementById('link-display').textContent)
+      .then(() => showToast('Link copied! 📋'));
+  }
+
+  function goToInbox() {
+    document.getElementById('inbox-username').value = currentUsername;
+    document.getElementById('inbox-secret').value   = currentSecret;
+    showPage('inbox'); viewInbox();
+  }
+
+  /* INBOX */
+  async function viewInbox() {
+    const username = document.getElementById('inbox-username').value.trim().toLowerCase();
+    const secret   = document.getElementById('inbox-secret').value.trim();
+    if (!username || !secret) return showToast('Fill in both fields!');
+    currentUsername = username; currentSecret = secret;
+
+    try {
+      const res  = await fetch(`${SUPABASE_URL}/rest/v1/messages?recipient_username=eq.${encodeURIComponent(username)}&order=created_at.desc`, { headers: BASE_HEADERS });
+      const data = await res.json();
+
+      document.getElementById('inbox-login').style.display    = 'none';
+      document.getElementById('inbox-messages').style.display = 'block';
+      document.getElementById('inbox-link-display').textContent = buildLink(username);
+      document.getElementById('inbox-title').textContent = `@${username}'s inbox`;
+      document.getElementById('inbox-count').textContent = `${data.length} message${data.length !== 1 ? 's' : ''}`;
+
+      const container = document.getElementById('inbox-container');
+      if (!data.length) {
+        container.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>No messages yet. Share your link!</p></div>`;
+        return;
+      }
+      container.innerHTML = '<div class="messages-grid"></div>';
+      const grid = container.querySelector('.messages-grid');
+      data.forEach((msg, i) => grid.innerHTML += renderCard(msg, i, true));
+    } catch (e) {
+      showToast('Failed to load inbox.');
+    }
+  }
+
+  function copyInboxLink() {
+    navigator.clipboard.writeText(document.getElementById('inbox-link-display').textContent)
+      .then(() => showToast('Link copied! 📋'));
+  }
+
+  /* INIT */
+  checkURLParams();
+  loadFeed();
+</script>
+</body>
+</html>
