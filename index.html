@@ -6,6 +6,7 @@
   <title>Whispr — say it anonymously</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <style>
     :root {
       --bg: #0a0a0f;
@@ -86,13 +87,7 @@
     .hero-actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
 
     /* TRENDING BANNER */
-    .trending-banner {
-      display: flex; align-items: center; justify-content: space-between;
-      background: linear-gradient(135deg, rgba(249,115,22,0.1), rgba(239,68,68,0.08));
-      border: 1px solid rgba(249,115,22,0.25); border-radius: 12px;
-      padding: 0.75rem 1rem; margin-bottom: 1.2rem; cursor: pointer;
-      transition: all 0.2s;
-    }
+    .trending-banner { display: flex; align-items: center; justify-content: space-between; background: linear-gradient(135deg, rgba(249,115,22,0.1), rgba(239,68,68,0.08)); border: 1px solid rgba(249,115,22,0.25); border-radius: 12px; padding: 0.75rem 1rem; margin-bottom: 1.2rem; cursor: pointer; transition: all 0.2s; }
     .trending-banner:hover { border-color: rgba(249,115,22,0.5); transform: translateY(-1px); }
     .trending-banner-left { display: flex; align-items: center; gap: 0.6rem; }
     .trending-banner-left span { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.88rem; }
@@ -104,7 +99,6 @@
     .feed-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.6rem; }
     .feed-title { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
     .mood-filters { display: flex; gap: 0.3rem; flex-wrap: wrap; }
-
     .mood-chip { padding: 0.26rem 0.65rem; border-radius: 999px; font-size: 0.68rem; font-weight: 500; cursor: pointer; border: 1px solid transparent; transition: all 0.2s; background: var(--surface); color: var(--muted); position: relative; }
     .mood-chip:hover { color: var(--text); }
     .mood-chip[data-mood="all"].active        { border-color: var(--accent);       color: var(--accent-light); background: rgba(124,58,237,0.1); }
@@ -113,15 +107,7 @@
     .mood-chip[data-mood="🥺 Feels"].active   { border-color: var(--mood-feels);   color: var(--mood-feels);   background: rgba(236,72,153,0.1); }
     .mood-chip[data-mood="🔥 Hot Take"].active{ border-color: var(--mood-hottake); color: var(--mood-hottake); background: rgba(249,115,22,0.1); }
     .mood-chip[data-mood="👀 Tea"].active     { border-color: var(--mood-tea);     color: var(--mood-tea);     background: rgba(6,182,212,0.1); }
-
-    /* TOP MOOD CROWN */
-    .mood-chip.top-mood::after {
-      content: '👑';
-      position: absolute;
-      top: -10px; right: -4px;
-      font-size: 0.7rem;
-      animation: crown-bounce 1.8s ease-in-out infinite;
-    }
+    .mood-chip.top-mood::after { content: '👑'; position: absolute; top: -10px; right: -4px; font-size: 0.7rem; animation: crown-bounce 1.8s ease-in-out infinite; }
     .mood-chip.top-mood { box-shadow: 0 0 10px rgba(250,204,21,0.25); }
     @keyframes crown-bounce { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 
@@ -130,14 +116,12 @@
     .msg-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1rem 1.1rem; position: relative; overflow: hidden; animation: fadeUp 0.35s ease both; transition: transform 0.2s, border-color 0.2s; }
     .msg-card:hover { transform: translateY(-2px); }
     @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-
     .msg-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
     .msg-card[data-mood="😤 Vent"]::before     { background: var(--mood-vent); }
     .msg-card[data-mood="💀 No Cap"]::before   { background: var(--mood-nocap); }
     .msg-card[data-mood="🥺 Feels"]::before    { background: var(--mood-feels); }
     .msg-card[data-mood="🔥 Hot Take"]::before { background: var(--mood-hottake); }
     .msg-card[data-mood="👀 Tea"]::before      { background: var(--mood-tea); }
-
     .msg-card[data-mood="😤 Vent"]:hover     { border-color: rgba(239,68,68,0.3); }
     .msg-card[data-mood="💀 No Cap"]:hover   { border-color: rgba(139,92,246,0.3); }
     .msg-card[data-mood="🥺 Feels"]:hover    { border-color: rgba(236,72,153,0.3); }
@@ -146,43 +130,53 @@
 
     .msg-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.45rem; }
     .msg-top-left { display: flex; align-items: center; gap: 0.5rem; }
-
     .mood-badge { font-size: 0.66rem; font-weight: 500; padding: 0.16rem 0.5rem; border-radius: 999px; }
     .mood-badge[data-mood="😤 Vent"]     { background: rgba(239,68,68,0.15);  color: var(--mood-vent); }
     .mood-badge[data-mood="💀 No Cap"]   { background: rgba(139,92,246,0.15); color: var(--mood-nocap); }
     .mood-badge[data-mood="🥺 Feels"]    { background: rgba(236,72,153,0.15); color: var(--mood-feels); }
     .mood-badge[data-mood="🔥 Hot Take"] { background: rgba(249,115,22,0.15); color: var(--mood-hottake); }
     .mood-badge[data-mood="👀 Tea"]      { background: rgba(6,182,212,0.15);  color: var(--mood-tea); }
-
     .msg-time { font-size: 0.66rem; color: var(--muted); }
     .msg-text { font-size: 0.9rem; line-height: 1.6; color: var(--text); margin-bottom: 0.65rem; }
 
     /* CARD ACTIONS */
-    .msg-actions { display: flex; align-items: center; justify-content: space-between; }
-    .msg-actions-left { display: flex; align-items: center; gap: 0.5rem; }
-
-    .like-btn {
-      display: flex; align-items: center; gap: 0.35rem;
-      background: transparent; border: 1px solid var(--border);
-      border-radius: 999px; padding: 0.28rem 0.65rem;
-      color: var(--muted); font-size: 0.72rem; font-weight: 500;
-      cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif;
-    }
+    .msg-actions { display: flex; align-items: center; gap: 0.5rem; }
+    .like-btn { display: flex; align-items: center; gap: 0.35rem; background: transparent; border: 1px solid var(--border); border-radius: 999px; padding: 0.28rem 0.65rem; color: var(--muted); font-size: 0.72rem; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
     .like-btn:hover { border-color: #ec4899; color: #ec4899; }
     .like-btn.liked { border-color: #ec4899; color: #ec4899; background: rgba(236,72,153,0.1); }
     .like-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: fill 0.2s; }
     .like-btn.liked svg { fill: #ec4899; }
 
-    .share-wa-btn {
-      display: flex; align-items: center; gap: 0.35rem;
-      background: transparent; border: 1px solid var(--border);
-      border-radius: 999px; padding: 0.28rem 0.65rem;
-      color: var(--muted); font-size: 0.72rem; font-weight: 500;
-      cursor: pointer; transition: all 0.2s; text-decoration: none;
+    .share-img-btn { display: flex; align-items: center; gap: 0.35rem; background: transparent; border: 1px solid var(--border); border-radius: 999px; padding: 0.28rem 0.65rem; color: var(--muted); font-size: 0.72rem; font-weight: 500; cursor: pointer; transition: all 0.2s; font-family: 'DM Sans', sans-serif; }
+    .share-img-btn:hover { border-color: #25d366; color: #25d366; background: rgba(37,211,102,0.08); }
+    .share-img-btn svg { width: 13px; height: 13px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* SHARE IMAGE CARD (hidden, rendered off-screen) */
+    #share-canvas-host {
+      position: fixed; left: -9999px; top: -9999px;
+      width: 480px; padding: 40px;
+      background: #0a0a0f;
       font-family: 'DM Sans', sans-serif;
+      border-radius: 24px;
     }
-    .share-wa-btn:hover { border-color: #25d366; color: #25d366; background: rgba(37,211,102,0.08); }
-    .share-wa-btn svg { width: 13px; height: 13px; }
+    .share-card-inner { background: #111118; border-radius: 16px; padding: 28px 28px 24px; border: 1px solid #1e1e2e; position: relative; overflow: hidden; }
+    .share-card-inner::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; }
+    .share-card-mood-bar-vent::before     { background: #ef4444; }
+    .share-card-mood-bar-nocap::before    { background: #8b5cf6; }
+    .share-card-mood-bar-feels::before    { background: #ec4899; }
+    .share-card-mood-bar-hottake::before  { background: #f97316; }
+    .share-card-mood-bar-tea::before      { background: #06b6d4; }
+    .share-badge { display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; margin-bottom: 14px; }
+    .share-badge-vent     { background: rgba(239,68,68,0.15);  color: #ef4444; }
+    .share-badge-nocap    { background: rgba(139,92,246,0.15); color: #8b5cf6; }
+    .share-badge-feels    { background: rgba(236,72,153,0.15); color: #ec4899; }
+    .share-badge-hottake  { background: rgba(249,115,22,0.15); color: #f97316; }
+    .share-badge-tea      { background: rgba(6,182,212,0.15);  color: #06b6d4; }
+    .share-msg-text { font-size: 18px; line-height: 1.6; color: #e8e8f0; margin-bottom: 20px; font-style: italic; }
+    .share-footer { display: flex; align-items: center; justify-content: space-between; }
+    .share-footer-logo { font-size: 14px; font-weight: 800; color: #e8e8f0; letter-spacing: -0.02em; }
+    .share-footer-logo span { color: #7c3aed; }
+    .share-footer-sub { font-size: 11px; color: #6b6b80; }
 
     /* TRENDING PAGE */
     .trending-page-header { padding: 1.5rem 0 1rem; }
@@ -191,7 +185,6 @@
     .back-btn { display: inline-flex; align-items: center; gap: 0.4rem; color: var(--muted); font-size: 0.8rem; cursor: pointer; margin-bottom: 1rem; background: none; border: none; font-family: 'DM Sans', sans-serif; transition: color 0.2s; }
     .back-btn:hover { color: var(--text); }
     .back-btn svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-
     .trending-rank { position: absolute; top: 0.8rem; right: 0.9rem; font-family: 'Syne', sans-serif; font-size: 0.72rem; font-weight: 800; color: var(--muted); }
     .trending-rank.gold   { color: #facc15; }
     .trending-rank.silver { color: #94a3b8; }
@@ -206,17 +199,14 @@
     .send-hero h2 { font-family: 'Syne', sans-serif; font-size: 1.55rem; font-weight: 800; margin-bottom: 0.3rem; }
     .send-hero p { color: var(--muted); font-size: 0.86rem; }
     .recipient-tag { display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(124,58,237,0.15); border: 1px solid rgba(124,58,237,0.3); color: var(--accent-light); padding: 0.26rem 0.8rem; border-radius: 999px; font-size: 0.76rem; font-weight: 500; margin-bottom: 0.85rem; }
-
     .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.2rem; }
     .form-label { font-size: 0.7rem; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 0.4rem; display: block; }
     .form-group { margin-bottom: 1rem; }
     .form-group:last-child { margin-bottom: 0; }
-
     textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.8rem 0.9rem; resize: none; min-height: 108px; transition: border-color 0.2s; outline: none; }
     textarea:focus { border-color: var(--accent); }
     textarea::placeholder { color: var(--muted); }
     .char-count { font-size: 0.66rem; color: var(--muted); text-align: right; margin-top: 0.26rem; }
-
     .mood-selector { display: flex; gap: 0.35rem; flex-wrap: wrap; }
     .mood-option { padding: 0.38rem 0.75rem; border-radius: 999px; font-size: 0.74rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--muted); transition: all 0.2s; }
     .mood-option:hover { color: var(--text); }
@@ -225,7 +215,6 @@
     .mood-option.selected[data-mood="🥺 Feels"]    { background: rgba(236,72,153,0.15); border-color: var(--mood-feels);   color: var(--mood-feels); }
     .mood-option.selected[data-mood="🔥 Hot Take"] { background: rgba(249,115,22,0.15); border-color: var(--mood-hottake); color: var(--mood-hottake); }
     .mood-option.selected[data-mood="👀 Tea"]      { background: rgba(6,182,212,0.15);  border-color: var(--mood-tea);     color: var(--mood-tea); }
-
     .public-toggle { display: flex; align-items: center; gap: 0.7rem; padding: 0.65rem 0.85rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; user-select: none; }
     .toggle-switch { width: 33px; height: 18px; background: var(--border); border-radius: 999px; position: relative; transition: background 0.2s; flex-shrink: 0; }
     .toggle-switch::after { content: ''; position: absolute; width: 12px; height: 12px; background: white; border-radius: 50%; top: 3px; left: 3px; transition: left 0.2s; }
@@ -233,7 +222,6 @@
     .toggle-switch.on::after { left: 18px; }
     .toggle-label { font-size: 0.8rem; color: var(--muted); }
     .toggle-label strong { color: var(--text); display: block; font-size: 0.84rem; }
-
     .send-btn { width: 100%; padding: 0.82rem; border-radius: 10px; font-size: 0.92rem; font-weight: 700; background: var(--accent); color: white; border: none; cursor: pointer; font-family: 'Syne', sans-serif; letter-spacing: 0.02em; transition: all 0.2s; margin-top: 0.55rem; }
     .send-btn:hover:not(:disabled) { background: #6d28d9; transform: translateY(-1px); }
     .send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
@@ -242,11 +230,9 @@
     .create-form { max-width: 500px; margin: 1.5rem auto; }
     .create-form h2 { font-family: 'Syne', sans-serif; font-size: 1.65rem; font-weight: 800; margin-bottom: 0.35rem; }
     .create-form > p { color: var(--muted); font-size: 0.86rem; margin-bottom: 1.6rem; line-height: 1.65; }
-
     input[type="text"] { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.78rem 0.9rem; outline: none; transition: border-color 0.2s; }
     input[type="text"]:focus { border-color: var(--accent); }
     input[type="text"]::placeholder { color: var(--muted); }
-
     .input-prefix { display: flex; align-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; transition: border-color 0.2s; }
     .input-prefix:focus-within { border-color: var(--accent); }
     .prefix-label { padding: 0.78rem 0.7rem 0.78rem 0.9rem; color: var(--muted); font-size: 0.8rem; white-space: nowrap; border-right: 1px solid var(--border); }
@@ -277,16 +263,8 @@
     .success-msg p { color: var(--muted); font-size: 0.86rem; }
 
     /* TOAST */
-    .toast {
-      position: fixed; bottom: 1.5rem; left: 50%;
-      transform: translateX(-50%) translateY(80px);
-      background: #1e1e2e; border: 1px solid var(--border);
-      color: var(--text); padding: 0.6rem 1.1rem; border-radius: 999px;
-      font-size: 0.8rem; font-weight: 500; z-index: 9999;
-      transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-      white-space: nowrap; pointer-events: none;
-    }
-    .toast.show { transform: translateX(-50%) translateY(0); }
+    .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(200px); background: #1e1e2e; border: 1px solid var(--border); color: var(--text); padding: 0.6rem 1.1rem; border-radius: 999px; font-size: 0.8rem; font-weight: 500; z-index: 9999; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s; white-space: nowrap; pointer-events: none; opacity: 0; }
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
     /* LOADING */
     .loading { display: flex; gap: 0.35rem; justify-content: center; padding: 2rem; }
@@ -298,9 +276,10 @@
     /* RESPONSIVE */
     @media (max-width: 640px) {
       nav.top-nav { display: none; }
-      nav.bottom-nav { display: flex; }
-      body { padding-bottom: var(--bottom-nav-h); }
-      .page { padding: 0.9rem 0.9rem 1.2rem; }
+      nav.bottom-nav { display: flex; transition: transform 0.3s ease; }
+      nav.bottom-nav.hidden { transform: translateY(100%); }
+      body { padding-bottom: 0; }
+      .page { padding: 0.9rem 0.9rem calc(var(--bottom-nav-h) + 2rem); }
       .hero { padding: 1.2rem 0.25rem 1rem; }
       .hero h1 { font-size: 1.75rem; }
       .feed-header { flex-direction: column; align-items: flex-start; }
@@ -314,6 +293,18 @@
   </style>
 </head>
 <body>
+
+<!-- OFF-SCREEN SHARE CARD for html2canvas -->
+<div id="share-canvas-host">
+  <div class="share-card-inner" id="share-card-inner">
+    <div class="share-badge" id="share-badge"></div>
+    <div class="share-msg-text" id="share-msg-text"></div>
+    <div class="share-footer">
+      <div class="share-footer-logo">Whisp<span>r</span></div>
+      <div class="share-footer-sub">say it anonymously</div>
+    </div>
+  </div>
+</div>
 
 <!-- TOP NAV -->
 <nav class="top-nav">
@@ -364,7 +355,6 @@
       <button class="btn btn-ghost btn-lg" onclick="showPage('send')">Send a message</button>
     </div>
   </div>
-
   <div class="trending-banner" onclick="showPage('trending')">
     <div class="trending-banner-left">
       <span class="trending-fire">🔥</span>
@@ -376,11 +366,10 @@
       <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
   </div>
-
   <div class="feed-header">
     <div class="feed-title">Live feed <span style="color:var(--muted);font-size:0.72rem;font-weight:400;">· last 72h</span></div>
     <div class="mood-filters" id="mood-filters">
-      <div class="mood-chip active" data-mood="all"         onclick="filterMood('all',this)">All</div>
+      <div class="mood-chip active" data-mood="all"      onclick="filterMood('all',this)">All</div>
       <div class="mood-chip" data-mood="😤 Vent"        onclick="filterMood('😤 Vent',this)">😤 Vent</div>
       <div class="mood-chip" data-mood="💀 No Cap"      onclick="filterMood('💀 No Cap',this)">💀 No Cap</div>
       <div class="mood-chip" data-mood="🥺 Feels"       onclick="filterMood('🥺 Feels',this)">🥺 Feels</div>
@@ -388,13 +377,10 @@
       <div class="mood-chip" data-mood="👀 Tea"         onclick="filterMood('👀 Tea',this)">👀 Tea</div>
     </div>
   </div>
-
-  <div id="feed-container">
-    <div class="loading"><span></span><span></span><span></span></div>
-  </div>
+  <div id="feed-container"><div class="loading"><span></span><span></span><span></span></div></div>
 </div>
 
-<!-- TRENDING PAGE -->
+<!-- TRENDING -->
 <div class="page" id="page-trending">
   <button class="back-btn" onclick="showPage('home')">
     <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
@@ -404,9 +390,7 @@
     <h2>🔥 Trending</h2>
     <p>Top 10 most liked messages in the last 24 hours</p>
   </div>
-  <div id="trending-container">
-    <div class="loading"><span></span><span></span><span></span></div>
-  </div>
+  <div id="trending-container"><div class="loading"><span></span><span></span><span></span></div></div>
 </div>
 
 <!-- SEND -->
@@ -467,13 +451,14 @@
         <div class="prefix-label">whispr.to/</div>
         <input type="text" id="username-input" placeholder="yourname" maxlength="30" />
       </div>
+      <div class="hint" style="margin-top:0.3rem;">Lowercase letters and numbers only. No spaces.</div>
     </div>
     <div class="form-group">
       <label class="form-label">Secret inbox code</label>
       <input type="text" id="secret-input" placeholder="make it memorable" maxlength="30" />
       <div class="hint">⚠️ Save this — you'll need it to open your inbox. We never store it.</div>
     </div>
-    <button class="send-btn" onclick="createLink()">Generate my link</button>
+    <button class="send-btn" id="create-btn" onclick="createLink()">Generate my link</button>
     <div id="link-result" style="display:none; margin-top:1.2rem;">
       <div class="share-card">
         <h3>🔗 Your Whispr link</h3>
@@ -530,13 +515,6 @@
     'Authorization': `Bearer ${SUPABASE_KEY}`
   };
 
-  // Session ID for anonymous like tracking
-  const SESSION_ID = (() => {
-    let id = localStorage.getItem('whispr_sid');
-    if (!id) { id = Math.random().toString(36).slice(2) + Date.now().toString(36); localStorage.setItem('whispr_sid', id); }
-    return id;
-  })();
-
   let selectedMood = null, isPublic = true, currentFilter = 'all';
   let currentUsername = null, currentSecret = null;
   let toastTimer = null;
@@ -551,6 +529,8 @@
   }
 
   /* ── UTILS ── */
+  function normalize(str) { return (str || '').trim().toLowerCase().replace(/\s+/g, ''); }
+
   function timeAgo(dateStr) {
     const diff = Date.now() - new Date(dateStr);
     const m = Math.floor(diff / 60000);
@@ -570,6 +550,16 @@
     return `${window.location.origin}${window.location.pathname}?u=${encodeURIComponent(username)}`;
   }
 
+  /* ── SIMPLE HASH for secret (FNV-1a) ── */
+  function hashSecret(str) {
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) {
+      h ^= str.charCodeAt(i);
+      h = (h * 16777619) >>> 0;
+    }
+    return h.toString(16);
+  }
+
   /* ── NAVIGATION ── */
   const PAGES = ['home','trending','send','create','inbox'];
   const BNAVS = { home:'bnav-home', trending:'bnav-trending', send:'bnav-send', create:'bnav-create', inbox:'bnav-inbox' };
@@ -579,8 +569,8 @@
     Object.entries(BNAVS).forEach(([page, btnId]) => {
       document.getElementById(btnId)?.classList.toggle('active', page === name);
     });
-    if (name === 'home')     { loadFeed(); }
-    if (name === 'trending') { loadTrending(); }
+    if (name === 'home')     loadFeed();
+    if (name === 'trending') loadTrending();
     window.scrollTo(0, 0);
   }
 
@@ -588,12 +578,12 @@
   function checkURLParams() {
     const u = new URLSearchParams(window.location.search).get('u');
     if (u) {
-      window._recipientUsername = u;
+      window._recipientUsername = normalize(u);
       showPage('send');
       const tag = document.getElementById('send-recipient-tag');
       tag.style.display = 'inline-flex';
-      tag.textContent = `✉️ Sending to @${u}`;
-      document.getElementById('send-subtitle').textContent = `@${u} will never know it was you.`;
+      tag.textContent = `✉️ Sending to @${window._recipientUsername}`;
+      document.getElementById('send-subtitle').textContent = `@${window._recipientUsername} will never know it was you.`;
     } else {
       document.getElementById('recipient-section').style.display = 'block';
     }
@@ -606,11 +596,9 @@
       const res  = await fetch(`${SUPABASE_URL}/rest/v1/messages?is_public=eq.true&created_at=gte.${since}&select=mood`, { headers: BASE_HEADERS });
       const data = await res.json();
       if (!Array.isArray(data) || !data.length) return;
-
       const counts = {};
       data.forEach(m => { counts[m.mood] = (counts[m.mood] || 0) + 1; });
       const topMood = Object.entries(counts).sort((a,b) => b[1]-a[1])[0][0];
-
       document.querySelectorAll('.mood-chip').forEach(chip => {
         chip.classList.remove('top-mood');
         if (chip.dataset.mood === topMood) chip.classList.add('top-mood');
@@ -622,27 +610,22 @@
   async function loadFeed() {
     const container = document.getElementById('feed-container');
     container.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
-
     const since72h = new Date(Date.now() - 72*60*60*1000).toISOString();
     let url = `${SUPABASE_URL}/rest/v1/messages?is_public=eq.true&created_at=gte.${since72h}&order=created_at.desc&limit=50`;
     if (currentFilter !== 'all') url += `&mood=eq.${encodeURIComponent(currentFilter)}`;
-
     try {
       const res  = await fetch(url, { headers: BASE_HEADERS });
       const data = await res.json();
-
       if (!Array.isArray(data) || !data.length) {
         container.innerHTML = `<div class="empty-state"><div class="emoji">👻</div><p>No messages in the last 72 hours. Be the first.</p></div>`;
         return;
       }
       container.innerHTML = '<div class="messages-grid" id="feed-grid"></div>';
       const grid = document.getElementById('feed-grid');
-      // Hide recipient on public feed for privacy
       data.forEach((msg, i) => grid.innerHTML += renderCard(msg, i, false));
     } catch(e) {
       container.innerHTML = `<div class="empty-state"><div class="emoji">😵</div><p>Couldn't load messages.</p></div>`;
     }
-
     loadTopMood();
   }
 
@@ -650,14 +633,10 @@
   async function loadTrending() {
     const container = document.getElementById('trending-container');
     container.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
-
     const since24h = new Date(Date.now() - 24*60*60*1000).toISOString();
-    const url = `${SUPABASE_URL}/rest/v1/messages?is_public=eq.true&created_at=gte.${since24h}&order=likes.desc&limit=10`;
-
     try {
-      const res  = await fetch(url, { headers: BASE_HEADERS });
+      const res  = await fetch(`${SUPABASE_URL}/rest/v1/messages?is_public=eq.true&created_at=gte.${since24h}&order=likes.desc&limit=10`, { headers: BASE_HEADERS });
       const data = await res.json();
-
       if (!Array.isArray(data) || !data.length) {
         container.innerHTML = `<div class="empty-state"><div class="emoji">🫙</div><p>No trending posts yet. Like some messages!</p></div>`;
         return;
@@ -674,22 +653,26 @@
     }
   }
 
+  /* ── MOOD → CSS KEY ── */
+  function moodKey(mood) {
+    if (mood.includes('Vent'))    return 'vent';
+    if (mood.includes('No Cap'))  return 'nocap';
+    if (mood.includes('Feels'))   return 'feels';
+    if (mood.includes('Hot Take'))return 'hottake';
+    if (mood.includes('Tea'))     return 'tea';
+    return 'vent';
+  }
+
   /* ── RENDER CARD ── */
   function renderCard(msg, i, inInbox, rankLabel = null, rankClass = '') {
-    const delay   = Math.min(i * 0.05, 0.4);
-    const liked   = isLiked(msg.id);
-    const likes   = msg.likes || 0;
-
-    // Privacy: hide recipient on public feed
+    const delay  = Math.min(i * 0.05, 0.4);
+    const liked  = isLiked(msg.id);
+    const likes  = msg.likes || 0;
     const recipientLine = inInbox && msg.recipient_username
-      ? `<div style="margin-top:0.4rem;font-size:0.7rem;color:var(--muted);">sent to <span style="color:var(--accent);font-weight:500;">you</span></div>`
-      : '';
-
-    const rankHTML = rankLabel
-      ? `<div class="trending-rank ${rankClass}">${rankLabel}</div>` : '';
-
-    const waText  = encodeURIComponent(`"${msg.message}" — ${msg.mood} · whispr`);
-    const waURL   = `https://wa.me/?text=${waText}`;
+      ? `<div style="margin-top:0.4rem;font-size:0.7rem;color:var(--muted);">sent to <span style="color:var(--accent);font-weight:500;">you</span></div>` : '';
+    const rankHTML = rankLabel ? `<div class="trending-rank ${rankClass}">${rankLabel}</div>` : '';
+    const msgEsc = escapeHTML(msg.message).replace(/'/g, "\\'");
+    const moodEsc = escapeHTML(msg.mood).replace(/'/g, "\\'");
 
     return `
       <div class="msg-card" data-mood="${escapeHTML(msg.mood)}" style="animation-delay:${delay}s">
@@ -703,24 +686,68 @@
         <div class="msg-text">${escapeHTML(msg.message)}</div>
         ${recipientLine}
         <div class="msg-actions">
-          <div class="msg-actions-left">
-            <button class="like-btn ${liked ? 'liked' : ''}" onclick="toggleLike(this,'${msg.id}',${likes})">
-              <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
-              <span class="like-count">${likes}</span>
-            </button>
-            <a class="share-wa-btn" href="${waURL}" target="_blank" rel="noopener">
-              <svg viewBox="0 0 24 24" style="width:13px;height:13px;fill:currentColor;stroke:none"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-              Share
-            </a>
-          </div>
+          <button class="like-btn ${liked ? 'liked' : ''}" onclick="toggleLike(this,'${msg.id}',${likes})">
+            <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+            <span class="like-count">${likes}</span>
+          </button>
+          <button class="share-img-btn" onclick="shareAsImage('${msgEsc}','${moodEsc}')">
+            <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+            Share
+          </button>
         </div>
       </div>`;
   }
 
+  /* ── WHATSAPP IMAGE SHARE ── */
+  async function shareAsImage(message, mood) {
+    showToast('Generating image...');
+    const key = moodKey(mood);
+
+    // Populate the off-screen card
+    const host  = document.getElementById('share-canvas-host');
+    const inner = document.getElementById('share-card-inner');
+    const badge = document.getElementById('share-badge');
+    const text  = document.getElementById('share-msg-text');
+
+    inner.className = `share-card-inner share-card-mood-bar-${key}`;
+    badge.className = `share-badge share-badge-${key}`;
+    badge.textContent = mood;
+    text.textContent  = `"${message}"`;
+
+    try {
+      const canvas = await html2canvas(host, {
+        backgroundColor: '#0a0a0f',
+        scale: 2,
+        useCORS: true,
+        logging: false
+      });
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) { showToast('Could not generate image.'); return; }
+
+        // Try Web Share API (works on mobile)
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [new File([blob], 'whispr.png', { type: 'image/png' })] })) {
+          const file = new File([blob], 'whispr.png', { type: 'image/png' });
+          await navigator.share({ files: [file], title: 'Whispr', text: mood });
+        } else {
+          // Fallback: download the image
+          const url = URL.createObjectURL(blob);
+          const a   = document.createElement('a');
+          a.href = url; a.download = 'whispr-message.png';
+          a.click();
+          URL.revokeObjectURL(url);
+          showToast('Image saved! Share it on WhatsApp 📲');
+        }
+      }, 'image/png');
+    } catch(e) {
+      console.error(e);
+      showToast('Could not generate image.');
+    }
+  }
+
   /* ── LIKES ── */
   function isLiked(id) {
-    const liked = JSON.parse(localStorage.getItem('whispr_likes') || '[]');
-    return liked.includes(id);
+    return JSON.parse(localStorage.getItem('whispr_likes') || '[]').includes(id);
   }
 
   function setLiked(id, val) {
@@ -731,25 +758,20 @@
   }
 
   async function toggleLike(btn, id, currentLikes) {
-    const liked   = isLiked(id);
-    const newVal  = !liked;
+    const liked    = isLiked(id);
+    const newVal   = !liked;
     const newCount = newVal ? currentLikes + 1 : Math.max(0, currentLikes - 1);
-
-    // Optimistic UI
     btn.classList.toggle('liked', newVal);
     btn.querySelector('.like-count').textContent = newCount;
     setLiked(id, newVal);
-
     try {
       await fetch(`${SUPABASE_URL}/rest/v1/messages?id=eq.${id}`, {
         method: 'PATCH',
         headers: { ...BASE_HEADERS, 'Prefer': 'return=minimal' },
         body: JSON.stringify({ likes: newCount })
       });
-      // Update onclick for next toggle
       btn.setAttribute('onclick', `toggleLike(this,'${id}',${newCount})`);
     } catch(e) {
-      // Revert on failure
       btn.classList.toggle('liked', liked);
       btn.querySelector('.like-count').textContent = currentLikes;
       setLiked(id, liked);
@@ -781,10 +803,11 @@
   async function sendMessage() {
     const text      = document.getElementById('msg-text').value.trim();
     const toEl      = document.getElementById('to-username');
-    const recipient = window._recipientUsername || (toEl ? toEl.value.trim() : '') || null;
+    const recipient = window._recipientUsername || normalize(toEl ? toEl.value : '') || null;
 
     if (!text)         return showToast('Write something first 👀');
     if (!selectedMood) return showToast('Pick a vibe first!');
+    if (!recipient)    return showToast('Who are you sending this to?');
 
     const btn = document.getElementById('send-btn');
     btn.disabled = true; btn.textContent = 'Sending...';
@@ -805,7 +828,6 @@
         btn.disabled = false; btn.textContent = 'Send anonymously ✦';
       }
     } catch(e) {
-      console.error(e);
       showToast('Network error. Try again.');
       btn.disabled = false; btn.textContent = 'Send anonymously ✦';
     }
@@ -823,16 +845,59 @@
     btn.disabled = false; btn.textContent = 'Send anonymously ✦';
   }
 
-  /* ── CREATE LINK ── */
-  function createLink() {
-    const username = document.getElementById('username-input').value.trim().toLowerCase().replace(/\s+/g,'');
-    const secret   = document.getElementById('secret-input').value.trim();
-    if (!username || username.length < 2) return showToast('Username too short!');
-    if (!secret) return showToast('Set a secret code!');
-    currentUsername = username; currentSecret = secret;
-    document.getElementById('link-display').textContent = buildLink(username);
-    document.getElementById('link-result').style.display = 'block';
-    showToast('Link created! 🔥');
+  /* ── CREATE LINK (with unique username check) ── */
+  async function createLink() {
+    const username = normalize(document.getElementById('username-input').value);
+    const secret   = normalize(document.getElementById('secret-input').value);
+
+    if (!username || username.length < 2) return showToast('Username too short! (min 2 chars)');
+    if (!/^[a-z0-9_]+$/.test(username))   return showToast('Username: letters, numbers, _ only');
+    if (!secret || secret.length < 3)     return showToast('Secret code too short! (min 3 chars)');
+
+    const btn = document.getElementById('create-btn');
+    btn.disabled = true; btn.textContent = 'Checking...';
+
+    try {
+      // Check if username already taken
+      const checkRes  = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}&select=id`, { headers: BASE_HEADERS });
+      const checkData = await checkRes.json();
+
+      if (checkData.length > 0) {
+        showToast('That username is taken! Try another. 😅');
+        btn.disabled = false; btn.textContent = 'Generate my link';
+        return;
+      }
+
+      // Register the username
+      const secretHash = hashSecret(secret);
+      const regRes = await fetch(`${SUPABASE_URL}/rest/v1/users`, {
+        method: 'POST',
+        headers: { ...BASE_HEADERS, 'Prefer': 'return=minimal' },
+        body: JSON.stringify({ username, secret_hash: secretHash })
+      });
+
+      if (!regRes.ok) {
+        const err = await regRes.text();
+        // Handle race condition (unique constraint violation)
+        if (err.includes('unique') || err.includes('duplicate') || regRes.status === 409) {
+          showToast('That username was just taken! Try another. 😅');
+        } else {
+          showToast('Something went wrong. Try again.');
+          console.error(err);
+        }
+        btn.disabled = false; btn.textContent = 'Generate my link';
+        return;
+      }
+
+      currentUsername = username; currentSecret = secret;
+      document.getElementById('link-display').textContent = buildLink(username);
+      document.getElementById('link-result').style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Generate my link';
+      showToast('Link created! 🔥');
+    } catch(e) {
+      showToast('Network error. Try again.');
+      btn.disabled = false; btn.textContent = 'Generate my link';
+    }
   }
 
   function copyLink() {
@@ -845,14 +910,25 @@
     showPage('inbox'); viewInbox();
   }
 
-  /* ── INBOX ── */
+  /* ── INBOX (with secret verification) ── */
   async function viewInbox() {
-    const username = document.getElementById('inbox-username').value.trim().toLowerCase();
-    const secret   = document.getElementById('inbox-secret').value.trim();
+    const username = normalize(document.getElementById('inbox-username').value);
+    const secret   = normalize(document.getElementById('inbox-secret').value);
     if (!username || !secret) return showToast('Fill in both fields!');
-    currentUsername = username; currentSecret = secret;
 
     try {
+      // Verify username + secret
+      const secretHash = hashSecret(secret);
+      const verifyRes  = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}&secret_hash=eq.${secretHash}&select=id`, { headers: BASE_HEADERS });
+      const verifyData = await verifyRes.json();
+
+      if (!verifyData.length) {
+        showToast('Wrong username or secret code! ❌');
+        return;
+      }
+
+      currentUsername = username; currentSecret = secret;
+
       const res  = await fetch(`${SUPABASE_URL}/rest/v1/messages?recipient_username=eq.${encodeURIComponent(username)}&order=created_at.desc`, { headers: BASE_HEADERS });
       const data = await res.json();
 
@@ -870,12 +946,32 @@
       container.innerHTML = '<div class="messages-grid"></div>';
       const grid = container.querySelector('.messages-grid');
       data.forEach((msg, i) => grid.innerHTML += renderCard(msg, i, true));
-    } catch(e) { showToast('Failed to load inbox.'); }
+    } catch(e) { showToast('Failed to load inbox. Try again.'); }
   }
 
   function copyInboxLink() {
     navigator.clipboard.writeText(document.getElementById('inbox-link-display').textContent).then(() => showToast('Link copied! 📋'));
   }
+
+  /* ── HIDE NAV ON SCROLL ── */
+  (function() {
+    let lastY = window.scrollY, ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const nav = document.getElementById('bottom-nav');
+          if (nav && window.innerWidth <= 640) {
+            const y = window.scrollY;
+            if (y > lastY && y > 80) nav.classList.add('hidden');
+            else nav.classList.remove('hidden');
+            lastY = y;
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    }, { passive: true });
+  })();
 
   /* ── INIT ── */
   checkURLParams();
