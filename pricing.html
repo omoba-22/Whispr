@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Whispr — Get more replies</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+  <script src="./js/whispr.js"></script>
+  <style id="page-style"></style>
+  <style>
+    :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
+
+    .pricing-hero { text-align: center; padding: 2.5rem 1rem 2rem; }
+    .pricing-hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
+    .pricing-hero h1 em { font-style: normal; color: var(--accent); }
+    .pricing-hero p { color: var(--muted); font-size: 0.92rem; max-width: 380px; margin: 0 auto; line-height: 1.65; }
+
+    .free-banner { background: rgba(124,58,237,0.08); border: 1px solid rgba(124,58,237,0.2); border-radius: 12px; padding: 0.85rem 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem; }
+    .free-banner-icon { font-size: 1.2rem; }
+    .free-banner-text { font-size: 0.84rem; color: var(--muted); }
+    .free-banner-text strong { color: var(--text); display: block; margin-bottom: 0.1rem; }
+
+    /* PACK CARDS */
+    .pack-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.4rem;
+      margin-bottom: 0.85rem;
+      cursor: pointer;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .pack-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+    .pack-card.featured {
+      border-color: rgba(124,58,237,0.5);
+      background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(6,182,212,0.05));
+    }
+    .pack-card.featured::before {
+      content: 'BEST VALUE';
+      position: absolute; top: 0; right: 1.2rem;
+      background: var(--accent); color: white;
+      font-size: 0.6rem; font-weight: 800;
+      padding: 0.25rem 0.7rem;
+      border-radius: 0 0 8px 8px;
+      letter-spacing: 0.08em;
+    }
+
+    .pack-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 0.75rem; }
+    .pack-name { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 800; margin-bottom: 0.2rem; }
+    .pack-tag { font-size: 0.72rem; color: var(--muted); }
+    .pack-price-block { text-align: right; }
+    .pack-amount { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; color: var(--accent-light); line-height: 1; }
+    .pack-amount span { font-size: 0.75rem; color: var(--muted); font-weight: 400; font-family: 'DM Sans', sans-serif; }
+    .pack-per { font-size: 0.7rem; color: var(--muted); margin-top: 0.2rem; }
+
+    .pack-perks { display: flex; flex-direction: column; gap: 0.4rem; }
+    .pack-perk { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--muted); }
+    .pack-perk svg { width: 14px; height: 14px; stroke: var(--accent-light); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+    .buy-btn {
+      width: 100%; padding: 0.85rem; border-radius: 12px;
+      font-size: 0.95rem; font-weight: 700;
+      background: var(--accent); color: white;
+      border: none; cursor: pointer;
+      font-family: 'Syne', sans-serif;
+      transition: all 0.2s; margin-top: 1rem;
+    }
+    .buy-btn:hover { background: #6d28d9; transform: translateY(-1px); }
+    .buy-btn.outline { background: transparent; border: 1px solid var(--border); color: var(--muted); }
+    .buy-btn.outline:hover { border-color: var(--accent); color: var(--accent-light); }
+
+    /* COMING SOON MODAL */
+    .coming-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 500; display: flex; align-items: flex-end; justify-content: center; backdrop-filter: blur(4px); animation: fadeIn 0.2s ease; }
+    .coming-modal.hidden { display: none; }
+    .coming-sheet { background: var(--surface); border: 1px solid var(--border); border-radius: 20px 20px 0 0; padding: 1.8rem 1.5rem; width: 100%; max-width: 500px; animation: slideUp 0.3s cubic-bezier(0.34,1.2,0.64,1); text-align: center; }
+    .coming-sheet h3 { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .coming-sheet p { color: var(--muted); font-size: 0.86rem; line-height: 1.65; margin-bottom: 1.2rem; }
+    .coming-pack-summary { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 1.2rem; display: flex; align-items: center; justify-content: space-between; }
+    .coming-pack-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem; }
+    .coming-pack-price { color: var(--accent-light); font-weight: 700; font-size: 1rem; }
+    .coming-actions { display: flex; flex-direction: column; gap: 0.6rem; }
+    .wa-btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.85rem; border-radius: 12px; background: #25d366; color: white; font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.92rem; border: none; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+    .wa-btn:hover { background: #1da851; }
+    .wa-btn svg { width: 18px; height: 18px; fill: white; }
+    @keyframes fadeIn { from{opacity:0;}to{opacity:1;} }
+    @keyframes slideUp { from{transform:translateY(100%);}to{transform:translateY(0);} }
+
+    /* FAQ */
+    .faq-section { margin-top: 2rem; }
+    .faq-section h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 1rem; }
+    .faq-item { border-bottom: 1px solid var(--border); padding: 0.85rem 0; cursor: pointer; }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q { font-size: 0.86rem; font-weight: 500; display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; }
+    .faq-q svg { width: 14px; height: 14px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; flex-shrink: 0; transition: transform 0.2s; }
+    .faq-item.open .faq-q svg { transform: rotate(180deg); }
+    .faq-a { font-size: 0.82rem; color: var(--muted); line-height: 1.6; margin-top: 0.5rem; display: none; }
+    .faq-item.open .faq-a { display: block; }
+  </style>
+</head>
+<body>
+<nav class="top-nav">
+  <a class="logo" href="index.html">Whisp<span>r</span></a>
+  <div class="nav-links">
+    <a href="index.html" class="btn btn-ghost">Feed</a>
+    <a href="index.html#trending" class="btn btn-ghost">🔥 Trending</a>
+    <a href="create.html" class="btn btn-ghost">My Link</a>
+    <a href="send.html" class="btn btn-ghost">Send</a>
+    <a href="inbox.html" class="btn btn-primary">Inbox</a>
+  </div>
+</nav>
+<nav class="bottom-nav" id="bottom-nav">
+  <a class="bottom-nav-item" href="index.html"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>Feed</a>
+  <a class="bottom-nav-item" href="index.html#trending"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Trending</a>
+  <a class="bottom-nav-item fab-btn" href="send.html"><div class="fab-inner"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>Send</a>
+  <a class="bottom-nav-item" href="create.html"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>My Link</a>
+  <a class="bottom-nav-item" href="inbox.html"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>Inbox</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="pricing-hero">
+    <div style="font-size:2rem;margin-bottom:0.75rem;">✦</div>
+    <h1>Unlock more <em>replies</em></h1>
+    <p>You get 3 free replies every month. Want more? Pick a pack — no subscription needed.</p>
+  </div>
+
+  <div class="free-banner">
+    <div class="free-banner-icon">🎁</div>
+    <div class="free-banner-text">
+      <strong>3 free replies every month</strong>
+      Resets on the 1st of each month. No payment needed.
+    </div>
+  </div>
+
+  <!-- PACK CARDS built by JS -->
+  <div id="pack-cards"></div>
+
+  <div class="faq-section">
+    <h3>Common questions</h3>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Do packs expire? <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="faq-a">Starter and Popular packs never expire — use them whenever. Savage Pass is monthly and resets each billing cycle.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Can I see who sent me a message? <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="faq-a">No. Whispr is 100% anonymous. We don't collect sender identities. Ever.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">What does replying do? <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="faq-a">Your reply shows under the original message on your feed — like a thread. The original sender doesn't get notified, but everyone can see your savage response. It's all anonymous.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">How do I pay? <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="faq-a">Paystack payment integration is coming very soon. For now, tap "Buy" on any pack and reach us directly on WhatsApp to activate manually.</div>
+    </div>
+    <div class="faq-item" onclick="toggleFaq(this)">
+      <div class="faq-q">Is my data safe? <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="faq-a">Messages are stored in a secured database. We don't store IPs or any personal info. Your secret code is hashed — even we can't read it.</div>
+    </div>
+  </div>
+</div>
+
+<!-- COMING SOON / CONTACT MODAL -->
+<div class="coming-modal hidden" id="coming-modal">
+  <div class="coming-sheet">
+    <div style="font-size:2rem;margin-bottom:0.6rem;">🚀</div>
+    <h3>Payment coming soon!</h3>
+    <p>We're integrating Paystack. For now, reach us on WhatsApp to activate your pack manually — we'll sort you out in minutes.</p>
+    <div class="coming-pack-summary">
+      <div class="coming-pack-name" id="modal-pack-name">—</div>
+      <div class="coming-pack-price" id="modal-pack-price">—</div>
+    </div>
+    <div class="coming-actions">
+      <a class="wa-btn" id="wa-contact-btn" href="#" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        Contact us on WhatsApp
+      </a>
+      <button class="buy-btn outline" onclick="document.getElementById('coming-modal').classList.add('hidden')">Maybe later</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('page-style').textContent = SHARED_CSS;
+
+  // Highlight pack from URL param
+  const preselected = new URLSearchParams(window.location.search).get('pack');
+
+  // Build pack cards
+  const container = document.getElementById('pack-cards');
+  PACKS.forEach(pack => {
+    const isFeatured = pack.id === 'popular';
+    const isPreselected = pack.id === preselected;
+    const repliesText = pack.replies === 'unlimited' ? 'Unlimited replies' : `${pack.replies} replies`;
+
+    const perks = pack.id === 'starter'
+      ? ['5 reply credits, never expire', 'Use any time across months', 'Works on all messages']
+      : pack.id === 'popular'
+      ? ['20 reply credits, never expire', 'Best value per reply', 'Works on all messages']
+      : ['Unlimited replies for 30 days', 'Auto-renews monthly', 'Priority support'];
+
+    const card = document.createElement('div');
+    card.className = `pack-card${isFeatured ? ' featured' : ''}${isPreselected ? ' selected' : ''}`;
+    if (isPreselected) card.style.borderColor = 'rgba(124,58,237,0.6)';
+
+    card.innerHTML = `
+      <div class="pack-top">
+        <div>
+          <div class="pack-name">${pack.label}</div>
+          <div class="pack-tag">${repliesText} · ${pack.note}</div>
+        </div>
+        <div class="pack-price-block">
+          <div class="pack-amount">₦${pack.price.toLocaleString()} <span></span></div>
+          <div class="pack-per">${pack.note}</div>
+        </div>
+      </div>
+      <div class="pack-perks">
+        ${perks.map(p => `<div class="pack-perk"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>${p}</div>`).join('')}
+      </div>
+      <button class="buy-btn" onclick="buyPack('${pack.id}')">Get ${pack.label} — ₦${pack.price.toLocaleString()}</button>
+    `;
+    container.appendChild(card);
+  });
+
+  function buyPack(id) {
+    const pack = PACKS.find(p => p.id === id);
+    if (!pack) return;
+
+    const repliesText = pack.replies === 'unlimited' ? 'Unlimited replies / month' : `${pack.replies} replies`;
+    document.getElementById('modal-pack-name').textContent = `${pack.label} — ${repliesText}`;
+    document.getElementById('modal-pack-price').textContent = `₦${pack.price.toLocaleString()} ${pack.note}`;
+
+    // WhatsApp message
+    const waMsg = encodeURIComponent(
+      `Hi! I want to buy the ${pack.label} pack on Whispr.\n\n` +
+      `Pack: ${pack.label}\nReplies: ${repliesText}\nPrice: ₦${pack.price.toLocaleString()} (${pack.note})\n\n` +
+      `My Whispr username: ${localStorage.getItem('whispr_last_username') || '(not set)'}\nSession ID: ${SESSION_ID}`
+    );
+    // Replace with your actual WhatsApp number
+    document.getElementById('wa-contact-btn').href = `https://wa.me/2347063917390?text=${waMsg}`;
+
+    document.getElementById('coming-modal').classList.remove('hidden');
+  }
+
+  function toggleFaq(el) {
+    el.classList.toggle('open');
+  }
+
+  // Auto-open modal if pack is preselected from URL
+  if (preselected) {
+    setTimeout(() => buyPack(preselected), 400);
+  }
+
+  // Hide/show bottom nav on scroll
+  (function(){
+    let lastY=window.scrollY,ticking=false;
+    window.addEventListener('scroll',()=>{
+      if(!ticking){requestAnimationFrame(()=>{
+        const nav=document.getElementById('bottom-nav');
+        if(nav&&window.innerWidth<=640){const y=window.scrollY;if(y>lastY&&y>80)nav.classList.add('hidden');else nav.classList.remove('hidden');lastY=y;}
+        ticking=false;
+      });ticking=true;}
+    },{passive:true});
+  })();
+</script>
+</body>
+</html>

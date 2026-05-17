@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Whispr — Get your link</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+  <script src="./js/whispr.js"></script>
+  <style id="page-style"></style>
+  <style>
+    :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
+
+    .create-wrap { max-width: 500px; margin: 2rem auto; }
+
+    .create-hero { margin-bottom: 2rem; }
+    .create-hero h1 { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.4rem; }
+    .create-hero h1 span { color: var(--accent); }
+    .create-hero p { color: var(--muted); font-size: 0.9rem; line-height: 1.65; }
+
+    .step-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.3rem; margin-bottom: 1rem; }
+    .step-label { font-size: 0.68rem; font-weight: 700; color: var(--accent-light); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    .step-num { width: 20px; height: 20px; background: var(--accent); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 0.65rem; color: white; font-weight: 800; flex-shrink: 0; }
+
+    .result-card { background: linear-gradient(135deg, rgba(124,58,237,0.12), rgba(6,182,212,0.08)); border: 1px solid rgba(124,58,237,0.3); border-radius: 16px; padding: 1.3rem; margin-top: 1.2rem; animation: fadeUp 0.4s ease; }
+    .result-card h3 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 0.75rem; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    .how-it-works { margin-top: 2rem; padding: 1.2rem; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; }
+    .how-it-works h4 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.88rem; margin-bottom: 0.9rem; }
+    .how-step { display: flex; gap: 0.75rem; align-items: flex-start; margin-bottom: 0.75rem; }
+    .how-step:last-child { margin-bottom: 0; }
+    .how-step-icon { font-size: 1rem; flex-shrink: 0; margin-top: 0.1rem; }
+    .how-step-text { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+    .how-step-text strong { color: var(--text); display: block; font-size: 0.84rem; margin-bottom: 0.1rem; }
+  </style>
+</head>
+<body>
+<nav class="top-nav">
+  <a class="logo" href="index.html">Whisp<span>r</span></a>
+  <div class="nav-links">
+    <a href="index.html" class="btn btn-ghost">Feed</a>
+    <a href="index.html#trending" class="btn btn-ghost">🔥 Trending</a>
+    <a href="create.html" class="btn btn-ghost active-nav">My Link</a>
+    <a href="send.html" class="btn btn-ghost">Send</a>
+    <a href="inbox.html" class="btn btn-primary">Inbox</a>
+  </div>
+</nav>
+<nav class="bottom-nav" id="bottom-nav">
+  <a class="bottom-nav-item" href="index.html"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>Feed</a>
+  <a class="bottom-nav-item" href="index.html#trending"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Trending</a>
+  <a class="bottom-nav-item fab-btn" href="send.html"><div class="fab-inner"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>Send</a>
+  <a class="bottom-nav-item active" href="create.html"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>My Link</a>
+  <a class="bottom-nav-item" href="inbox.html"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>Inbox</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="create-wrap">
+    <div class="create-hero">
+      <h1>Get your link <span>✦</span></h1>
+      <p>Pick a username, set a secret code, and share your link. People send you anonymous messages — only you can read them.</p>
+    </div>
+
+    <div class="step-card">
+      <div class="step-label"><span class="step-num">1</span> Choose a username</div>
+      <div class="input-prefix">
+        <div class="prefix-label">whispr.to/</div>
+        <input type="text" id="username-input" placeholder="yourname" maxlength="30"
+          oninput="this.value=this.value.toLowerCase().replace(/[^a-z0-9_]/g,'')" />
+      </div>
+      <div class="hint" style="margin-top:0.4rem;">Lowercase letters, numbers and _ only. Min 2 characters.</div>
+    </div>
+
+    <div class="step-card">
+      <div class="step-label"><span class="step-num">2</span> Set your secret inbox code</div>
+      <input type="text" id="secret-input" placeholder="make it memorable, like: mango99" maxlength="30" />
+      <div class="hint" style="margin-top:0.4rem;">⚠️ Save this somewhere safe — you need it to open your inbox. We never store it.</div>
+    </div>
+
+    <button class="send-btn" id="create-btn" onclick="createLink()">Generate my link</button>
+
+    <div id="link-result" style="display:none">
+      <div class="result-card">
+        <h3>🔗 Your Whispr link is ready!</h3>
+        <div class="link-box" style="margin-bottom:0.75rem;">
+          <div class="link-display" id="link-display"></div>
+          <button class="copy-btn" id="copy-link-btn" onclick="copyLink()">Copy</button>
+        </div>
+        <div class="hint">Share this with anyone. Messages go straight to your inbox.</div>
+      </div>
+      <div style="display:flex;gap:0.6rem;margin-top:0.75rem;">
+        <button class="btn btn-ghost" style="flex:1" onclick="shareLink()">Share link 📤</button>
+        <a href="inbox.html" class="btn btn-primary" style="flex:2;text-align:center;text-decoration:none;" id="go-inbox-btn">View my inbox →</a>
+      </div>
+    </div>
+
+    <div class="how-it-works">
+      <h4>How it works</h4>
+      <div class="how-step">
+        <div class="how-step-icon">🔗</div>
+        <div class="how-step-text"><strong>Share your link</strong>Post it on your IG bio, WhatsApp status, Twitter — anywhere.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-icon">👻</div>
+        <div class="how-step-text"><strong>People send anonymously</strong>Anyone with your link can drop you a message. You never see who sent it.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-icon">📥</div>
+        <div class="how-step-text"><strong>Open your inbox</strong>Go to Inbox, enter your username + secret code, and read your messages.</div>
+      </div>
+      <div class="how-step">
+        <div class="how-step-icon">↩️</div>
+        <div class="how-step-text"><strong>Reply (optional)</strong>Swipe right on any message to reply. First 3 replies per month are free.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('page-style').textContent = SHARED_CSS;
+
+  let createdUsername = null;
+
+  async function createLink() {
+    const username = normalize(document.getElementById('username-input').value);
+    const secret   = normalize(document.getElementById('secret-input').value);
+
+    if (!username || username.length < 2) return showToast('Username too short! Min 2 characters.');
+    if (!/^[a-z0-9_]+$/.test(username))   return showToast('Letters, numbers and _ only!');
+    if (!secret || secret.length < 3)     return showToast('Secret code too short! Min 3 characters.');
+
+    const btn = document.getElementById('create-btn');
+    btn.disabled = true; btn.textContent = 'Checking...';
+
+    try {
+      // Check if username taken
+      const checkRes  = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}&select=id`, { headers: BASE_HEADERS });
+      const checkData = await checkRes.json();
+
+      if (checkData.length > 0) {
+        showToast('That username is taken! Try another 😅');
+        btn.disabled = false; btn.textContent = 'Generate my link';
+        return;
+      }
+
+      // Register
+      const regRes = await dbPost('users', { username, secret_hash: hashSecret(secret) });
+      if (!regRes.ok) {
+        const err = await regRes.text();
+        if (err.includes('unique') || err.includes('duplicate') || regRes.status === 409) {
+          showToast('Username just got taken! Try another 😅');
+        } else {
+          showToast('Something went wrong. Try again.');
+          console.error(err);
+        }
+        btn.disabled = false; btn.textContent = 'Generate my link';
+        return;
+      }
+
+      createdUsername = username;
+      const link = buildLink(username);
+      document.getElementById('link-display').textContent = link;
+      document.getElementById('link-result').style.display = 'block';
+
+      // Pre-fill inbox link
+      document.getElementById('go-inbox-btn').href = `inbox.html?u=${encodeURIComponent(username)}`;
+
+      // Store in localStorage for quick inbox access
+      localStorage.setItem('whispr_last_username', username);
+
+      btn.textContent = 'Link created! ✓';
+      showToast('Link created! Share it now 🔥');
+
+      // Scroll to result
+      setTimeout(() => document.getElementById('link-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+
+    } catch(e) {
+      showToast('Network error. Try again.');
+      btn.disabled = false; btn.textContent = 'Generate my link';
+    }
+  }
+
+  function copyLink() {
+    const link = document.getElementById('link-display').textContent;
+    navigator.clipboard.writeText(link).then(() => {
+      const btn = document.getElementById('copy-link-btn');
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = 'Copy', 2000);
+      showToast('Link copied! 📋');
+    });
+  }
+
+  function shareLink() {
+    const link = document.getElementById('link-display').textContent;
+    if (navigator.share) {
+      navigator.share({ title: 'Send me an anonymous message on Whispr', url: link });
+    } else {
+      copyLink();
+    }
+  }
+
+  // If returning from inbox page with a username pre-filled
+  const savedUsername = localStorage.getItem('whispr_last_username');
+  if (savedUsername) {
+    document.getElementById('username-input').value = savedUsername;
+  }
+
+  // Hide/show bottom nav on scroll
+  (function(){
+    let lastY=window.scrollY,ticking=false;
+    window.addEventListener('scroll',()=>{
+      if(!ticking){requestAnimationFrame(()=>{
+        const nav=document.getElementById('bottom-nav');
+        if(nav&&window.innerWidth<=640){const y=window.scrollY;if(y>lastY&&y>80)nav.classList.add('hidden');else nav.classList.remove('hidden');lastY=y;}
+        ticking=false;
+      });ticking=true;}
+    },{passive:true});
+  })();
+</script>
+</body>
+</html>

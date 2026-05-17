@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Whispr — Replies Feed</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="./js/whispr.js"></script>
+  <style id="page-style"></style>
+  <style>
+    :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
+
+    /* REPLY THREAD CARD */
+    .reply-thread-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      animation: fadeUp 0.35s ease both;
+      margin-bottom: 0.8rem;
+      transition: border-color 0.2s;
+    }
+    .reply-thread-card:hover { border-color: rgba(124,58,237,0.3); }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);} }
+
+    /* ORIGINAL MESSAGE PART */
+    .rtc-original {
+      padding: 0.9rem 1.1rem 0.7rem;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .rtc-original::before {
+      content: '';
+      position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+    }
+    .rtc-original.mood-vent::before   { background: var(--mood-vent); }
+    .rtc-original.mood-nocap::before  { background: var(--mood-nocap); }
+    .rtc-original.mood-feels::before  { background: var(--mood-feels); }
+    .rtc-original.mood-hottake::before{ background: var(--mood-hottake); }
+    .rtc-original.mood-tea::before    { background: var(--mood-tea); }
+
+    .rtc-original-label { font-size: 0.62rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.4rem; }
+    .rtc-original-label .mood-badge { font-size: 0.6rem; padding: 0.1rem 0.4rem; }
+    .rtc-original-text { font-size: 0.86rem; color: var(--muted); line-height: 1.55; font-style: italic; }
+
+    /* REPLY PART */
+    .rtc-reply {
+      padding: 0.85rem 1.1rem 1rem;
+      background: rgba(124,58,237,0.04);
+    }
+    .rtc-reply-label { font-size: 0.62rem; color: var(--accent-light); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; margin-bottom: 0.4rem; display: flex; align-items: center; gap: 0.4rem; }
+    .rtc-reply-label svg { width: 11px; height: 11px; stroke: var(--accent-light); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .rtc-reply-text { font-size: 0.95rem; color: var(--text); line-height: 1.6; font-weight: 500; margin-bottom: 0.65rem; }
+
+    .rtc-footer { display: flex; align-items: center; justify-content: space-between; }
+    .rtc-time { font-size: 0.65rem; color: var(--muted); }
+    .rtc-actions { display: flex; gap: 0.4rem; align-items: center; }
+
+    /* PAGE HEADER */
+    .replies-header { margin-bottom: 1.2rem; }
+    .replies-header h2 { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; margin-bottom: 0.2rem; }
+    .replies-header p { color: var(--muted); font-size: 0.82rem; }
+
+    /* TABS */
+    .feed-tabs { display: flex; gap: 0.4rem; margin-bottom: 1.1rem; }
+    .feed-tab { padding: 0.35rem 0.85rem; border-radius: 999px; font-size: 0.76rem; font-weight: 500; cursor: pointer; border: 1px solid var(--border); background: var(--surface); color: var(--muted); transition: all 0.2s; }
+    .feed-tab.active { background: rgba(124,58,237,0.1); border-color: var(--accent); color: var(--accent-light); }
+  </style>
+</head>
+<body>
+<nav class="top-nav">
+  <a class="logo" href="index.html">Whisp<span>r</span></a>
+  <div class="nav-links">
+    <a href="index.html" class="btn btn-ghost">Feed</a>
+    <a href="index.html#trending" class="btn btn-ghost">🔥 Trending</a>
+    <a href="reply-feed.html" class="btn btn-ghost active-nav">Replies</a>
+    <a href="create.html" class="btn btn-ghost">My Link</a>
+    <a href="inbox.html" class="btn btn-primary">Inbox</a>
+  </div>
+</nav>
+<nav class="bottom-nav" id="bottom-nav">
+  <a class="bottom-nav-item" href="index.html"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>Feed</a>
+  <a class="bottom-nav-item" href="index.html#trending"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Trending</a>
+  <a class="bottom-nav-item fab-btn" href="send.html"><div class="fab-inner"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>Send</a>
+  <a class="bottom-nav-item" href="create.html"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>My Link</a>
+  <a class="bottom-nav-item" href="inbox.html"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>Inbox</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="replies-header">
+    <h2>↩️ Replies</h2>
+    <p>See how people are firing back — anonymously.</p>
+  </div>
+
+  <div class="feed-tabs">
+    <div class="feed-tab active" onclick="setTab('recent', this)">Most Recent</div>
+    <div class="feed-tab" onclick="setTab('liked', this)">Most Liked</div>
+  </div>
+
+  <div id="replies-container">
+    <div class="loading"><span></span><span></span><span></span></div>
+  </div>
+</div>
+
+<div id="share-canvas-host">
+  <div class="share-card-inner" id="share-card-inner">
+    <div class="share-badge" id="share-badge"></div>
+    <div class="share-msg-text" id="share-msg-text"></div>
+    <div class="share-footer"><div class="share-footer-logo">Whisp<span>r</span></div><div class="share-footer-sub">say it anonymously</div></div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('page-style').textContent = SHARED_CSS;
+
+  let currentTab = 'recent';
+
+  function setTab(tab, el) {
+    currentTab = tab;
+    document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    loadReplies();
+  }
+
+  async function loadReplies() {
+    const container = document.getElementById('replies-container');
+    container.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
+
+    const since72h = new Date(Date.now() - 72*60*60*1000).toISOString();
+    const order    = currentTab === 'liked' ? 'likes.desc' : 'created_at.desc';
+
+    try {
+      // Fetch all messages that have a reply_text (original messages that were replied to)
+      const res  = await fetch(
+        `${SUPABASE_URL}/rest/v1/messages?is_public=eq.true&reply_text=not.is.null&reply_to_id=is.null&created_at=gte.${since72h}&order=${order}&limit=30`,
+        { headers: BASE_HEADERS }
+      );
+      const data = await res.json();
+
+      if (!Array.isArray(data) || !data.length) {
+        container.innerHTML = `<div class="empty-state"><div class="emoji">💬</div><p>No public replies yet.<br>Be the first to clap back.</p></div>`;
+        return;
+      }
+
+      container.innerHTML = '';
+      data.forEach((msg, i) => container.innerHTML += renderReplyThreadCard(msg, i));
+
+    } catch(e) {
+      container.innerHTML = `<div class="empty-state"><div class="emoji">😵</div><p>Couldn't load replies.</p></div>`;
+    }
+  }
+
+  function renderReplyThreadCard(msg, i) {
+    const delay   = Math.min(i * 0.05, 0.4);
+    const key     = moodKey(msg.mood);
+    const liked   = isLiked(msg.id);
+    const likes   = msg.likes || 0;
+    const replyEsc = escapeHTML(msg.reply_text);
+    const msgEsc   = escapeHTML(msg.message).replace(/'/g,"\\'").replace(/\n/g,' ');
+    const moodEsc  = escapeHTML(msg.mood).replace(/'/g,"\\'");
+
+    return `
+      <div class="reply-thread-card" style="animation-delay:${delay}s">
+        <!-- ORIGINAL MESSAGE -->
+        <div class="rtc-original mood-${key}">
+          <div class="rtc-original-label">
+            <svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+            anonymous message
+            <div class="mood-badge mood-badge-${key}">${escapeHTML(msg.mood)}</div>
+          </div>
+          <div class="rtc-original-text">"${escapeHTML(msg.message)}"</div>
+        </div>
+
+        <!-- REPLY -->
+        <div class="rtc-reply">
+          <div class="rtc-reply-label">
+            <svg viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
+            clapped back
+          </div>
+          <div class="rtc-reply-text">${replyEsc}</div>
+          <div class="rtc-footer">
+            <div class="rtc-time">${timeAgo(msg.created_at)}</div>
+            <div class="rtc-actions">
+              <button class="like-btn ${liked ? 'liked' : ''}" onclick="toggleLike(this,'${msg.id}',${likes})">
+                <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+                <span class="like-count">${likes}</span>
+              </button>
+              <button class="share-img-btn" onclick="shareAsImage('${msgEsc}','${moodEsc}')">
+                <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+                Share
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  // Hide/show bottom nav on scroll
+  (function(){
+    let lastY=window.scrollY,ticking=false;
+    window.addEventListener('scroll',()=>{
+      if(!ticking){requestAnimationFrame(()=>{
+        const nav=document.getElementById('bottom-nav');
+        if(nav&&window.innerWidth<=640){const y=window.scrollY;if(y>lastY&&y>80)nav.classList.add('hidden');else nav.classList.remove('hidden');lastY=y;}
+        ticking=false;
+      });ticking=true;}
+    },{passive:true});
+  })();
+
+  loadReplies();
+</script>
+</body>
+</html>

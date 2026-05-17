@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Whispr — Send a message</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="./js/whispr.js"></script>
+  <style id="page-style"></style>
+  <style>
+    :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
+    .send-hero { text-align:center; padding:1.5rem 1rem 1.1rem; }
+    .send-hero h2 { font-family:'Syne',sans-serif; font-size:1.55rem; font-weight:800; margin-bottom:0.3rem; }
+    .send-hero p { color:var(--muted); font-size:0.86rem; }
+    .recipient-tag { display:inline-flex; align-items:center; gap:0.4rem; background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); color:var(--accent-light); padding:0.26rem 0.8rem; border-radius:999px; font-size:0.76rem; font-weight:500; margin-bottom:0.85rem; }
+  </style>
+</head>
+<body>
+<nav class="top-nav">
+  <a class="logo" href="index.html">Whisp<span>r</span></a>
+  <div class="nav-links">
+    <a href="index.html" class="btn btn-ghost">Feed</a>
+    <a href="index.html#trending" class="btn btn-ghost">🔥 Trending</a>
+    <a href="create.html" class="btn btn-ghost">My Link</a>
+    <a href="send.html" class="btn btn-ghost active-nav">Send</a>
+    <a href="inbox.html" class="btn btn-primary">Inbox</a>
+  </div>
+</nav>
+<nav class="bottom-nav" id="bottom-nav">
+  <a class="bottom-nav-item" href="index.html"><svg viewBox="0 0 24 24"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>Feed</a>
+  <a class="bottom-nav-item" href="index.html#trending"><svg viewBox="0 0 24 24"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>Trending</a>
+  <a class="bottom-nav-item fab-btn active" href="send.html"><div class="fab-inner"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>Send</a>
+  <a class="bottom-nav-item" href="create.html"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>My Link</a>
+  <a class="bottom-nav-item" href="inbox.html"><svg viewBox="0 0 24 24"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>Inbox</a>
+</nav>
+
+<div class="page-wrap">
+  <div class="send-hero">
+    <div id="send-recipient-tag" class="recipient-tag" style="display:none"></div>
+    <h2>Drop a message</h2>
+    <p id="send-subtitle">It's anonymous. They'll never know it's you.</p>
+  </div>
+
+  <div id="send-form-area">
+    <div class="form-card" id="recipient-section" style="display:none;margin-bottom:0.8rem;">
+      <label class="form-label">Send to (username)</label>
+      <input type="text" id="to-username" placeholder="e.g. josh" />
+    </div>
+    <div class="form-card">
+      <div class="form-group">
+        <label class="form-label">Your message</label>
+        <textarea id="msg-text" maxlength="300" placeholder="type something real..." oninput="document.getElementById('char-count').textContent=this.value.length"></textarea>
+        <div class="char-count"><span id="char-count">0</span>/300</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pick a vibe</label>
+        <div class="mood-selector">
+          <div class="mood-option" data-mood="😤 Vent"        onclick="selectMood(this)">😤 Vent</div>
+          <div class="mood-option" data-mood="💀 No Cap"      onclick="selectMood(this)">💀 No Cap</div>
+          <div class="mood-option" data-mood="🥺 Feels"       onclick="selectMood(this)">🥺 Feels</div>
+          <div class="mood-option" data-mood="🔥 Hot Take"    onclick="selectMood(this)">🔥 Hot Take</div>
+          <div class="mood-option" data-mood="👀 Tea"         onclick="selectMood(this)">👀 Tea</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="public-toggle" onclick="togglePublic()">
+          <div class="toggle-switch on" id="public-toggle-switch"></div>
+          <div class="toggle-label"><strong>Show on public feed</strong>Still 100% anonymous</div>
+        </div>
+      </div>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">Send anonymously ✦</button>
+    </div>
+  </div>
+
+  <div id="send-success" style="display:none">
+    <div class="success-msg">
+      <div class="big-emoji">👻</div>
+      <h3>Message sent!</h3>
+      <p>They have no idea who you are. 👀</p><br>
+      <button class="btn btn-primary btn-lg" onclick="resetSend()">Send another</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('page-style').textContent = SHARED_CSS;
+  let selectedMood = null, isPublic = true;
+
+  const u = new URLSearchParams(window.location.search).get('u');
+  if (u) {
+    window._recipientUsername = normalize(u);
+    const tag = document.getElementById('send-recipient-tag');
+    tag.style.display = 'inline-flex';
+    tag.textContent = `✉️ Sending to @${window._recipientUsername}`;
+    document.getElementById('send-subtitle').textContent = `@${window._recipientUsername} will never know it was you.`;
+  } else {
+    document.getElementById('recipient-section').style.display = 'block';
+  }
+
+  function selectMood(el) {
+    document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
+    el.classList.add('selected'); selectedMood = el.dataset.mood;
+  }
+  function togglePublic() {
+    isPublic = !isPublic;
+    document.getElementById('public-toggle-switch').classList.toggle('on', isPublic);
+  }
+
+  async function sendMessage() {
+    const text      = document.getElementById('msg-text').value.trim();
+    const toEl      = document.getElementById('to-username');
+    const recipient = window._recipientUsername || normalize(toEl ? toEl.value : '') || null;
+    if (!text)         return showToast('Write something first 👀');
+    if (!selectedMood) return showToast('Pick a vibe first!');
+    if (!recipient)    return showToast('Who are you sending this to?');
+    const btn = document.getElementById('send-btn');
+    btn.disabled = true; btn.textContent = 'Sending...';
+    try {
+      const res = await dbPost('messages', { message: text, mood: selectedMood, is_public: isPublic, recipient_username: recipient, likes: 0 });
+      if (res.ok) {
+        document.getElementById('send-form-area').style.display = 'none';
+        document.getElementById('send-success').style.display   = 'block';
+      } else {
+        const err = await res.text(); console.error(err);
+        showToast(`Send failed (${res.status})`);
+        btn.disabled = false; btn.textContent = 'Send anonymously ✦';
+      }
+    } catch(e) {
+      showToast('Network error. Try again.');
+      btn.disabled = false; btn.textContent = 'Send anonymously ✦';
+    }
+  }
+
+  function resetSend() {
+    document.getElementById('msg-text').value = '';
+    document.getElementById('char-count').textContent = '0';
+    selectedMood = null; isPublic = true;
+    document.getElementById('public-toggle-switch').classList.add('on');
+    document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
+    document.getElementById('send-form-area').style.display = 'block';
+    document.getElementById('send-success').style.display   = 'none';
+    const btn = document.getElementById('send-btn');
+    btn.disabled = false; btn.textContent = 'Send anonymously ✦';
+  }
+</script>
+</body>
+</html>
