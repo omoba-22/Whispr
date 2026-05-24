@@ -10,6 +10,7 @@
   <style id="page-style"></style>
   <style>
     :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
+    .btn { text-decoration: none;}
     .send-hero { text-align:center; padding:1.5rem 1rem 1.1rem; }
     .send-hero h2 { font-family:'Syne',sans-serif; font-size:1.55rem; font-weight:800; margin-bottom:0.3rem; }
     .send-hero p { color:var(--muted); font-size:0.86rem; }
@@ -100,8 +101,10 @@
 
   function selectMood(el) {
     document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected'); selectedMood = el.dataset.mood;
+    el.classList.add('selected');
+    selectedMood = el.dataset.mood;
   }
+
   function togglePublic() {
     isPublic = !isPublic;
     document.getElementById('public-toggle-switch').classList.toggle('on', isPublic);
@@ -111,23 +114,25 @@
     const text      = document.getElementById('msg-text').value.trim();
     const toEl      = document.getElementById('to-username');
     const recipient = window._recipientUsername || normalize(toEl ? toEl.value : '') || null;
+
     if (!text)         return showToast('Write something first 👀');
     if (!selectedMood) return showToast('Pick a vibe first!');
     if (!recipient)    return showToast('Who are you sending this to?');
+
     const btn = document.getElementById('send-btn');
     btn.disabled = true; btn.textContent = 'Sending...';
+
     try {
-      const res = await dbPost('messages', { message: text, mood: selectedMood, is_public: isPublic, recipient_username: recipient, likes: 0 });
-      if (res.ok) {
-        document.getElementById('send-form-area').style.display = 'none';
-        document.getElementById('send-success').style.display   = 'block';
-      } else {
-        const err = await res.text(); console.error(err);
-        showToast(`Send failed (${res.status})`);
-        btn.disabled = false; btn.textContent = 'Send anonymously ✦';
-      }
+      await apiPost('/api/messages/send', {
+        message:            text,
+        mood:               selectedMood,
+        is_public:          isPublic,
+        recipient_username: recipient
+      });
+      document.getElementById('send-form-area').style.display = 'none';
+      document.getElementById('send-success').style.display   = 'block';
     } catch(e) {
-      showToast('Network error. Try again.');
+      showToast(e.message || 'Failed to send. Try again.');
       btn.disabled = false; btn.textContent = 'Send anonymously ✦';
     }
   }
@@ -143,6 +148,8 @@
     const btn = document.getElementById('send-btn');
     btn.disabled = false; btn.textContent = 'Send anonymously ✦';
   }
+
+  attachScrollNav();
 </script>
 </body>
 </html>

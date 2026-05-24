@@ -10,6 +10,7 @@
   <style id="page-style"></style>
   <style>
     :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
+    .btn { text-decoration: none;}
     .view-inbox-form { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.3rem; margin:1.2rem auto; max-width:460px; }
     .view-inbox-form h3 { font-family:'Syne',sans-serif; font-weight:700; margin-bottom:0.35rem; font-size:1.15rem; }
     .view-inbox-form > p { color:var(--muted); font-size:0.82rem; margin-bottom:1rem; }
@@ -83,6 +84,9 @@
     </div>
     <button class="send-btn" id="open-inbox-btn" onclick="viewInbox()">Open inbox</button>
   </div>
+  <div style="text-align:right;margin-top:0.35rem;">
+    <span onclick="showForgotSecret()" style="font-size:0.72rem;color:var(--accent-light);cursor:pointer;">Forgot your code?</span>
+  </div>
 
   <!-- MESSAGES -->
   <div id="inbox-messages" style="display:none">
@@ -109,9 +113,9 @@
 </div>
 
 <!-- REPLY DRAWER -->
-<div class="reply-drawer hidden" id="reply-drawer">
-  <div class="reply-sheet">
-    <div class="reply-sheet-handle"></div>
+<div class="reply-drawer hidden" id="reply-drawer" onclick="handleDrawerBackdropClick(event)">
+  <div class="reply-sheet" id="reply-sheet">
+    <div class="reply-sheet-handle" id="reply-drag-handle"></div>
     <div class="reply-quoted" id="reply-quoted-msg">
       <strong>Replying to:</strong>
       <span id="reply-quoted-text"></span>
@@ -141,7 +145,7 @@
     <div class="modal-title">You've used your 3 free replies 👀</div>
     <div class="modal-sub">Get a pack to keep replying. Your replies are fire — don't stop now.</div>
     <div id="pack-list"></div>
-    <div class="paywall-note">Payments coming soon via Paystack.<br>For now, <a href="mailto:hello@whispr.app" style="color:var(--accent-light)">contact us</a> to manually activate a pack.</div>
+    <div class="paywall-note">Secure payment via Paystack. Instant activation after payment.</div>
     <button class="reply-cancel" style="width:100%;margin-top:0.75rem;" onclick="document.getElementById('paywall-modal').classList.add('hidden')">Maybe later</button>
   </div>
 </div>
@@ -154,6 +158,37 @@
   </div>
 </div>
 
+<!-- FORGOT SECRET MODAL -->
+<div class="modal-overlay hidden" id="forgot-modal">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div style="text-align:center;margin-bottom:1.2rem;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">🔐</div>
+      <div class="modal-title">Forgot your secret code?</div>
+      <div class="modal-sub">Secret codes are hashed — they can't be recovered. But you can reset your account by verifying your username.</div>
+    </div>
+
+    <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:12px;padding:0.9rem;margin-bottom:1.2rem;">
+      <div style="font-size:0.8rem;color:#ef4444;font-weight:600;margin-bottom:0.3rem;">⚠️ Warning</div>
+      <div style="font-size:0.78rem;color:var(--muted);line-height:1.5;">Resetting will permanently delete all messages in your inbox. This cannot be undone.</div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Confirm your username to reset</label>
+      <input type="text" id="reset-username-input" placeholder="your username" />
+    </div>
+    <div class="form-group">
+      <label class="form-label">Set a new secret code</label>
+      <input type="text" id="reset-new-secret" placeholder="new secret code" />
+    </div>
+
+    <div style="display:flex;gap:0.6rem;margin-top:0.5rem;">
+      <button class="reply-cancel" style="flex:1" onclick="document.getElementById('forgot-modal').classList.add('hidden')">Cancel</button>
+      <button class="reply-submit" style="flex:2;background:#ef4444;" id="reset-btn" onclick="resetAccount()">Delete & Reset</button>
+    </div>
+  </div>
+</div>
+
 <script>
   document.getElementById('page-style').textContent = SHARED_CSS;
 
@@ -161,6 +196,30 @@
   let replyPublic     = true;
   let replyTargetId   = null;
   let repliesUsed     = 0;
+  let replyLimit      = 3;
+
+  // Auto-fill and auto-login if token exists
+  const uParam = new URLSearchParams(window.location.search).get('u');
+  if (uParam) document.getElementById('inbox-username').value = normalize(uParam);
+
+  const savedToken    = getToken();
+  const savedUsername = getUsername();
+  if (savedToken && savedUsername) {
+    document.getElementById('inbox-username').value = savedUsername;
+    currentUsername = savedUsername;
+    (async () => {
+      try {
+        await loadInbox();
+        await updateReplyCounter();
+      } catch(e) {
+        clearSession();
+        currentUsername = null;
+        document.getElementById('inbox-login').style.display    = 'block';
+        document.getElementById('inbox-messages').style.display = 'none';
+        showToast('Session expired. Please log in again.');
+      }
+    })();
+  }
 
   async function viewInbox() {
     const username = normalize(document.getElementById('inbox-username').value);
@@ -171,32 +230,26 @@
     btn.disabled = true; btn.textContent = 'Opening...';
 
     try {
-      const secretHash = hashSecret(secret);
-      const res  = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}&secret_hash=eq.${secretHash}&select=id`, { headers: BASE_HEADERS });
-      const data = await res.json();
-      if (!data.length) {
-        showToast('Wrong username or secret code! ❌');
-        btn.disabled = false; btn.textContent = 'Open inbox';
-        return;
-      }
-
-      currentUsername = username;
-      await loadInbox(username);
+      const result = await apiPost('/api/auth/verify', { username, secret });
+      setToken(result.token);
+      setUsername(result.username);
+      currentUsername = result.username;
+      await loadInbox();
       await updateReplyCounter();
     } catch(e) {
-      showToast('Failed to open inbox. Try again.');
+      showToast(e.message || 'Wrong username or secret code!');
     }
     btn.disabled = false; btn.textContent = 'Open inbox';
   }
 
-  async function loadInbox(username) {
-    const res  = await fetch(`${SUPABASE_URL}/rest/v1/messages?recipient_username=eq.${encodeURIComponent(username)}&reply_to_id=is.null&order=created_at.desc`, { headers: BASE_HEADERS });
-    const data = await res.json();
+  async function loadInbox() {
+    const res = await apiGet(`/api/messages/inbox/${currentUsername}`);
+    const data = res.messages;
 
     document.getElementById('inbox-login').style.display    = 'none';
     document.getElementById('inbox-messages').style.display = 'block';
-    document.getElementById('inbox-link-display').textContent = buildLink(username);
-    document.getElementById('inbox-title').textContent = `@${username}'s inbox`;
+    document.getElementById('inbox-link-display').textContent = buildLink(currentUsername);
+    document.getElementById('inbox-title').textContent = `@${currentUsername}'s inbox`;
     document.getElementById('inbox-count').textContent = `${data.length} message${data.length!==1?'s':''}`;
 
     const container = document.getElementById('inbox-container');
@@ -207,40 +260,119 @@
     container.innerHTML = '<div class="messages-grid" id="inbox-grid"></div>';
     const grid = document.getElementById('inbox-grid');
     data.forEach((msg, i) => grid.innerHTML += renderCard(msg, i, { inInbox: true }));
-
-    // Attach swipe listeners
     attachSwipeListeners(grid, (msg) => openReplyDrawer(msg));
   }
 
   async function updateReplyCounter() {
-    repliesUsed = await getRepliesUsed();
-    const limit = hasUnlimitedPass() ? '∞' : FREE_REPLY_LIMIT + getPaidReplies();
-    document.getElementById('reply-used-display').textContent  = repliesUsed;
-    document.getElementById('reply-limit-display').textContent = limit;
+    try {
+      const data = await apiGet('/api/replies/count');
+      repliesUsed = data.used;
+      replyLimit  = data.limit;
+
+      const usedEl  = document.getElementById('reply-used-display');
+      const limitEl = document.getElementById('reply-limit-display');
+      const bar     = document.querySelector('.reply-limit-bar .reply-limit-text');
+
+      if (data.has_unlimited) {
+        if (usedEl)  usedEl.textContent  = data.used;
+        if (limitEl) limitEl.textContent = '∞';
+        if (bar) bar.innerHTML = `Replies this month: <strong>${data.used}</strong> · <strong style="color:var(--accent-light)">Savage Pass active ✦</strong>`;
+        replyLimit = -1;
+      } else {
+        if (usedEl)  usedEl.textContent  = data.used;
+        if (limitEl) limitEl.textContent = data.limit;
+        if (data.pending_replies > 0) {
+          if (bar) bar.innerHTML = `Replies: <strong>${data.used}/${data.limit}</strong> · <strong style="color:#f97316">${data.pending_replies} credits pending after Savage Pass</strong>`;
+        }
+      }
+    } catch(e) {
+      console.error('updateReplyCounter failed:', e);
+    }
   }
 
-  /* REPLY DRAWER */
-  function openReplyDrawer(msg) {
-    const totalAllowed = hasUnlimitedPass() ? Infinity : FREE_REPLY_LIMIT + getPaidReplies();
-
-    if (repliesUsed >= totalAllowed) {
-      // Soft nudge — show paywall but keep drawer accessible
-      showPaywall();
-    }
-
+  async function openReplyDrawer(msg) {
     replyTargetId = msg.id;
     document.getElementById('reply-quoted-text').textContent = msg.text;
     document.getElementById('reply-text').value = '';
     document.getElementById('reply-char').textContent = '0';
     replyPublic = true;
     document.getElementById('reply-public-switch').classList.add('on');
+
+    // Check if user has hit their limit
+    if (repliesUsed >= replyLimit && replyLimit !== -1) {
+      // Check payment status from server before showing paywall
+      try {
+        const status = await apiGet('/api/payment/status');
+        if (status.has_unlimited || status.paid_replies > 0) {
+          // They have paid — refresh their count and just open drawer
+          await updateReplyCounter();
+          document.getElementById('reply-drawer').classList.remove('hidden');
+          return;
+        }
+      } catch(e) {}
+      // No active pack — show paywall
+      showPaywall();
+      return;
+    }
+
     document.getElementById('reply-drawer').classList.remove('hidden');
   }
 
+  function handleDrawerBackdropClick(e) {
+    // Close if clicking the dark backdrop, not the sheet itself
+    if (e.target === document.getElementById('reply-drawer')) {
+      closeReplyDrawer();
+    }
+  }
+
   function closeReplyDrawer() {
-    document.getElementById('reply-drawer').classList.add('hidden');
+    const drawer = document.getElementById('reply-drawer');
+    const sheet  = document.getElementById('reply-sheet');
+    sheet.style.transition = 'transform 0.3s cubic-bezier(0.4,0,0.2,1)';
+    sheet.style.transform  = 'translateY(100%)';
+    setTimeout(() => {
+      drawer.classList.add('hidden');
+      sheet.style.transform  = '';
+      sheet.style.transition = '';
+    }, 300);
     replyTargetId = null;
   }
+
+  // Drag down to dismiss
+  (function() {
+    const handle = document.getElementById('reply-drag-handle');
+    const sheet  = document.getElementById('reply-sheet');
+    let startY = 0, currentY = 0, dragging = false;
+
+    const onStart = (e) => {
+      startY   = e.touches ? e.touches[0].clientY : e.clientY;
+      dragging = true;
+      sheet.style.transition = 'none';
+    };
+    const onMove = (e) => {
+      if (!dragging) return;
+      currentY = (e.touches ? e.touches[0].clientY : e.clientY) - startY;
+      if (currentY > 0) sheet.style.transform = `translateY(${currentY}px)`;
+    };
+    const onEnd = () => {
+      if (!dragging) return;
+      dragging = false;
+      if (currentY > 100) {
+        closeReplyDrawer();
+      } else {
+        sheet.style.transition = 'transform 0.3s cubic-bezier(0.34,1.2,0.64,1)';
+        sheet.style.transform  = '';
+      }
+      currentY = 0;
+    };
+
+    handle.addEventListener('touchstart', onStart, { passive: true });
+    handle.addEventListener('touchmove',  onMove,  { passive: true });
+    handle.addEventListener('touchend',   onEnd);
+    handle.addEventListener('mousedown',  onStart);
+    window.addEventListener('mousemove',  onMove);
+    window.addEventListener('mouseup',    onEnd);
+  })();
 
   function toggleReplyPublic() {
     replyPublic = !replyPublic;
@@ -251,63 +383,54 @@
     const text = document.getElementById('reply-text').value.trim();
     if (!text) return showToast('Write your reply first!');
 
-    const totalAllowed = hasUnlimitedPass() ? Infinity : FREE_REPLY_LIMIT + getPaidReplies();
-    if (repliesUsed >= totalAllowed) return showPaywall();
-
     const btn = document.getElementById('reply-submit-btn');
     btn.disabled = true; btn.textContent = 'Sending...';
 
     try {
-      // 1. Save the reply as a new message linked to the original
-      const res = await dbPost('messages', {
-        message:            text,
-        mood:               '↩️ Reply',
-        is_public:          replyPublic,
-        recipient_username: null,
-        reply_to_id:        replyTargetId,
-        reply_text:         text,
-        likes:              0
+      const result = await apiPost('/api/replies/send', {
+        reply_text:  text,
+        reply_to_id: replyTargetId,
+        is_public:   replyPublic
       });
-
-      // 2. Also update the original message's reply_text field so it shows in the thread
-      await dbPatch('messages', `?id=eq.${replyTargetId}`, { reply_text: text });
-
-      // 3. Increment reply count
-      const monthKey = getMonthKey();
-      await fetch(`${SUPABASE_URL}/rest/v1/reply_counts`, {
-        method: 'POST',
-        headers: { ...BASE_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=minimal' },
-        body: JSON.stringify({ session_id: SESSION_ID, month_key: monthKey, count: repliesUsed + 1 })
-      });
-
-      // 4. Deduct from paid pack if applicable
-      if (!hasUnlimitedPass() && repliesUsed >= FREE_REPLY_LIMIT) {
-        const pack = JSON.parse(localStorage.getItem('whispr_pack') || 'null');
-        if (pack && pack.remaining > 0) {
-          pack.remaining--;
-          localStorage.setItem('whispr_pack', JSON.stringify(pack));
-        }
-      }
-
       closeReplyDrawer();
-      showToast('Reply sent! 🔥');
-      await loadInbox(currentUsername);
+      showToast(`Reply sent! 🔥 (${result.remaining} left this month)`);
+      await loadInbox();
       await updateReplyCounter();
     } catch(e) {
-      showToast('Failed to send reply. Try again.');
+      if (e.status === 402) {
+        showPaywall();
+      } else {
+        showToast(e.message || 'Failed to send reply.');
+      }
     }
-
     btn.disabled = false; btn.textContent = 'Reply ✦';
   }
 
-  /* PAYWALL */
-  function showPaywall() {
+  async function showPaywall() {
+    // Check if they already have a pack first
+    try {
+      const status = await apiGet('/api/payment/status');
+      if (status.has_unlimited) {
+        // Savage pass active — just open drawer, something else is wrong
+        showToast('Savage Pass active! Try again.');
+        await updateReplyCounter();
+        return;
+      }
+      if (status.paid_replies > 0) {
+        showToast(`You have ${status.paid_replies} paid replies left!`);
+        await updateReplyCounter();
+        document.getElementById('reply-drawer').classList.remove('hidden');
+        return;
+      }
+    } catch(e) {}
+
+    // No active pack — show pricing modal
     const list = document.getElementById('pack-list');
     list.innerHTML = PACKS.map(p => `
       <div class="paywall-pack ${p.id==='popular'?'best':''}" onclick="selectPack('${p.id}')">
         <div class="pack-left">
           <div class="pack-name">${p.label}${p.badge?`<span class="pack-badge">${p.badge}</span>`:''}</div>
-          <div class="pack-desc">${p.replies === 'unlimited' ? 'Unlimited replies' : `${p.replies} replies`}</div>
+          <div class="pack-desc">${p.replies==='unlimited'?'Unlimited replies':`${p.replies} replies`}</div>
         </div>
         <div class="pack-price">₦${p.price.toLocaleString()} <span>/ ${p.note}</span></div>
       </div>`).join('');
@@ -315,13 +438,36 @@
   }
 
   function selectPack(id) {
-    // Payment not yet integrated — redirect to pricing page
     window.location.href = `pricing.html?pack=${id}`;
   }
 
-  // Render pack list on load
-  showPaywall(); // pre-render packs in background
-  document.getElementById('paywall-modal').classList.add('hidden'); // hide immediately
+  function showForgotSecret() {
+    document.getElementById('forgot-modal').classList.remove('hidden');
+  }
+
+  async function resetAccount() {
+    const username  = normalize(document.getElementById('reset-username-input').value);
+    const newSecret = normalize(document.getElementById('reset-new-secret').value);
+
+    if (!username)             return showToast('Enter your username');
+    if (!newSecret || newSecret.length < 3) return showToast('New secret too short!');
+
+    const btn = document.getElementById('reset-btn');
+    btn.disabled = true; btn.textContent = 'Resetting...';
+
+    try {
+      await apiPost('/api/auth/reset', { username, new_secret: newSecret });
+      document.getElementById('forgot-modal').classList.add('hidden');
+      showToast('Account reset! You can now log in with your new code.');
+      // Clear any saved session for this user
+      if (getUsername() === username) clearSession();
+    } catch(e) {
+      showToast(e.message || 'Reset failed. Try again.');
+    }
+    btn.disabled = false; btn.textContent = 'Delete & Reset';
+  }
+
+  attachScrollNav();
 </script>
 </body>
 </html>

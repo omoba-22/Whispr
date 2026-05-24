@@ -10,7 +10,7 @@
   <style id="page-style"></style>
   <style>
     :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
-
+    .btn { text-decoration: none;}
     /* REPLY THREAD CARD */
     .reply-thread-card {
       background: var(--surface);
@@ -113,7 +113,6 @@
 
 <script>
   document.getElementById('page-style').textContent = SHARED_CSS;
-
   let currentTab = 'recent';
 
   function setTab(tab, el) {
@@ -126,63 +125,49 @@
   async function loadReplies() {
     const container = document.getElementById('replies-container');
     container.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
-
-    const since72h = new Date(Date.now() - 72*60*60*1000).toISOString();
-    const order    = currentTab === 'liked' ? 'likes.desc' : 'created_at.desc';
-
     try {
-      // Fetch all messages that have a reply_text (original messages that were replied to)
-      const res  = await fetch(
-        `${SUPABASE_URL}/rest/v1/messages?is_public=eq.true&reply_text=not.is.null&reply_to_id=is.null&created_at=gte.${since72h}&order=${order}&limit=30`,
-        { headers: BASE_HEADERS }
-      );
-      const data = await res.json();
-
-      if (!Array.isArray(data) || !data.length) {
+      const sort = currentTab === 'liked' ? 'liked' : 'recent';
+      const data = await apiGet(`/api/replies/feed?sort=${sort}`);
+      if (!data.messages.length) {
         container.innerHTML = `<div class="empty-state"><div class="emoji">💬</div><p>No public replies yet.<br>Be the first to clap back.</p></div>`;
         return;
       }
-
       container.innerHTML = '';
-      data.forEach((msg, i) => container.innerHTML += renderReplyThreadCard(msg, i));
-
+      data.messages.forEach((msg, i) => container.innerHTML += renderReplyThreadCard(msg, i));
     } catch(e) {
       container.innerHTML = `<div class="empty-state"><div class="emoji">😵</div><p>Couldn't load replies.</p></div>`;
     }
   }
 
   function renderReplyThreadCard(msg, i) {
-    const delay   = Math.min(i * 0.05, 0.4);
-    const key     = moodKey(msg.mood);
-    const liked   = isLiked(msg.id);
-    const likes   = msg.likes || 0;
-    const replyEsc = escapeHTML(msg.reply_text);
-    const msgEsc   = escapeHTML(msg.message).replace(/'/g,"\\'").replace(/\n/g,' ');
-    const moodEsc  = escapeHTML(msg.mood).replace(/'/g,"\\'");
-
+    const delay    = Math.min(i * 0.05, 0.4);
+    const key      = moodKey(msg.original_mood || msg.mood);
+    const liked    = isLiked(msg.id);
+    const likes    = msg.likes || 0;
+    const origText = escapeHTML(msg.original_message || '');
+    const origMood = escapeHTML(msg.original_mood || '');
+    const msgEsc   = origText.replace(/'/g,"\\'");
+    const moodEsc  = origMood.replace(/'/g,"\\'");
     return `
       <div class="reply-thread-card" style="animation-delay:${delay}s">
-        <!-- ORIGINAL MESSAGE -->
         <div class="rtc-original mood-${key}">
           <div class="rtc-original-label">
             <svg viewBox="0 0 24 24" style="width:11px;height:11px;stroke:var(--muted);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
             anonymous message
-            <div class="mood-badge mood-badge-${key}">${escapeHTML(msg.mood)}</div>
+            <div class="mood-badge mood-badge-${key}">${origMood}</div>
           </div>
-          <div class="rtc-original-text">"${escapeHTML(msg.message)}"</div>
+          <div class="rtc-original-text">"${origText}"</div>
         </div>
-
-        <!-- REPLY -->
         <div class="rtc-reply">
           <div class="rtc-reply-label">
             <svg viewBox="0 0 24 24"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 00-4-4H4"/></svg>
             clapped back
           </div>
-          <div class="rtc-reply-text">${replyEsc}</div>
+          <div class="rtc-reply-text">${escapeHTML(msg.message)}</div>
           <div class="rtc-footer">
             <div class="rtc-time">${timeAgo(msg.created_at)}</div>
             <div class="rtc-actions">
-              <button class="like-btn ${liked ? 'liked' : ''}" onclick="toggleLike(this,'${msg.id}',${likes})">
+              <button class="like-btn ${liked?'liked':''}" onclick="toggleLike(this,'${msg.id}',${likes})">
                 <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
                 <span class="like-count">${likes}</span>
               </button>
@@ -196,18 +181,7 @@
       </div>`;
   }
 
-  // Hide/show bottom nav on scroll
-  (function(){
-    let lastY=window.scrollY,ticking=false;
-    window.addEventListener('scroll',()=>{
-      if(!ticking){requestAnimationFrame(()=>{
-        const nav=document.getElementById('bottom-nav');
-        if(nav&&window.innerWidth<=640){const y=window.scrollY;if(y>lastY&&y>80)nav.classList.add('hidden');else nav.classList.remove('hidden');lastY=y;}
-        ticking=false;
-      });ticking=true;}
-    },{passive:true});
-  })();
-
+  attachScrollNav();
   loadReplies();
 </script>
 </body>

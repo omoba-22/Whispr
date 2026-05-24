@@ -9,7 +9,7 @@
   <style id="page-style"></style>
   <style>
     :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
-
+    .btn { text-decoration: none;}
     .create-wrap { max-width: 500px; margin: 2rem auto; }
 
     .create-hero { margin-bottom: 2rem; }
@@ -73,7 +73,9 @@
     <div class="step-card">
       <div class="step-label"><span class="step-num">2</span> Set your secret inbox code</div>
       <input type="text" id="secret-input" placeholder="make it memorable, like: mango99" maxlength="30" />
-      <div class="hint" style="margin-top:0.4rem;">⚠️ Save this somewhere safe — you need it to open your inbox. We never store it.</div>
+      <div class="hint" style="margin-top:0.4rem;color:#f97316;">
+        ⚠️ IMPORTANT: Write your secret code down somewhere safe. It cannot be recovered if forgotten. We never store it in plain text.
+      </div>
     </div>
 
     <button class="send-btn" id="create-btn" onclick="createLink()">Generate my link</button>
@@ -117,7 +119,6 @@
 
 <script>
   document.getElementById('page-style').textContent = SHARED_CSS;
-
   let createdUsername = null;
 
   async function createLink() {
@@ -132,49 +133,17 @@
     btn.disabled = true; btn.textContent = 'Checking...';
 
     try {
-      // Check if username taken
-      const checkRes  = await fetch(`${SUPABASE_URL}/rest/v1/users?username=eq.${encodeURIComponent(username)}&select=id`, { headers: BASE_HEADERS });
-      const checkData = await checkRes.json();
-
-      if (checkData.length > 0) {
-        showToast('That username is taken! Try another 😅');
-        btn.disabled = false; btn.textContent = 'Generate my link';
-        return;
-      }
-
-      // Register
-      const regRes = await dbPost('users', { username, secret_hash: hashSecret(secret) });
-      if (!regRes.ok) {
-        const err = await regRes.text();
-        if (err.includes('unique') || err.includes('duplicate') || regRes.status === 409) {
-          showToast('Username just got taken! Try another 😅');
-        } else {
-          showToast('Something went wrong. Try again.');
-          console.error(err);
-        }
-        btn.disabled = false; btn.textContent = 'Generate my link';
-        return;
-      }
-
+      await apiPost('/api/auth/register', { username, secret });
       createdUsername = username;
-      const link = buildLink(username);
-      document.getElementById('link-display').textContent = link;
-      document.getElementById('link-result').style.display = 'block';
-
-      // Pre-fill inbox link
-      document.getElementById('go-inbox-btn').href = `inbox.html?u=${encodeURIComponent(username)}`;
-
-      // Store in localStorage for quick inbox access
       localStorage.setItem('whispr_last_username', username);
-
+      document.getElementById('link-display').textContent = buildLink(username);
+      document.getElementById('link-result').style.display = 'block';
+      document.getElementById('go-inbox-btn').href = `inbox.html?u=${encodeURIComponent(username)}`;
       btn.textContent = 'Link created! ✓';
       showToast('Link created! Share it now 🔥');
-
-      // Scroll to result
       setTimeout(() => document.getElementById('link-result').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
-
     } catch(e) {
-      showToast('Network error. Try again.');
+      showToast(e.message || 'Something went wrong. Try again.');
       btn.disabled = false; btn.textContent = 'Generate my link';
     }
   }
@@ -198,23 +167,10 @@
     }
   }
 
-  // If returning from inbox page with a username pre-filled
   const savedUsername = localStorage.getItem('whispr_last_username');
-  if (savedUsername) {
-    document.getElementById('username-input').value = savedUsername;
-  }
+  if (savedUsername) document.getElementById('username-input').value = savedUsername;
 
-  // Hide/show bottom nav on scroll
-  (function(){
-    let lastY=window.scrollY,ticking=false;
-    window.addEventListener('scroll',()=>{
-      if(!ticking){requestAnimationFrame(()=>{
-        const nav=document.getElementById('bottom-nav');
-        if(nav&&window.innerWidth<=640){const y=window.scrollY;if(y>lastY&&y>80)nav.classList.add('hidden');else nav.classList.remove('hidden');lastY=y;}
-        ticking=false;
-      });ticking=true;}
-    },{passive:true});
-  })();
+  attachScrollNav();
 </script>
 </body>
 </html>
