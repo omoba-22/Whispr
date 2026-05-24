@@ -5,7 +5,7 @@
 
 const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:3000'
-  : 'https://your-backend-url-here.onrender.com'; // 👈 change when you deploy
+  : 'https://whispr-ewnd.onrender.com'; // 👈 change when you deploy
 
 const PACKS = [
   { id: 'starter', label: 'Starter',     replies: 5,           price: 300,  note: 'one-time',  badge: null },
