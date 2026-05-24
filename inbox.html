@@ -198,7 +198,6 @@
   let repliesUsed     = 0;
   let replyLimit      = 3;
 
-  // Auto-fill and auto-login if token exists
   const uParam = new URLSearchParams(window.location.search).get('u');
   if (uParam) document.getElementById('inbox-username').value = normalize(uParam);
 
