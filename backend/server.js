@@ -3,7 +3,7 @@ require('dotenv').config();
 const express    = require('express');
 const cors       = require('cors');
 const helmet     = require('helmet');
-const { general } = require('./middleware/ratelimit');
+const { general } = require('./middleware/rateLimit');
 const { sanitizeBody } = require('./middleware/sanitize');
 
 const authRoutes     = require('./routes/auth');
