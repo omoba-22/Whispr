@@ -5,17 +5,14 @@
   <title>Whispr — Send a message</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style/send.css"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/whispr.js"></script>
   <style id="page-style"></style>
-  <style>
-    :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
-    .btn { text-decoration: none;}
-    .send-hero { text-align:center; padding:1.5rem 1rem 1.1rem; }
-    .send-hero h2 { font-family:'Syne',sans-serif; font-size:1.55rem; font-weight:800; margin-bottom:0.3rem; }
-    .send-hero p { color:var(--muted); font-size:0.86rem; }
-    .recipient-tag { display:inline-flex; align-items:center; gap:0.4rem; background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); color:var(--accent-light); padding:0.26rem 0.8rem; border-radius:999px; font-size:0.76rem; font-weight:500; margin-bottom:0.85rem; }
-  </style>
 </head>
 <body>
 <nav class="top-nav">
@@ -84,72 +81,6 @@
   </div>
 </div>
 
-<script>
-  document.getElementById('page-style').textContent = SHARED_CSS;
-  let selectedMood = null, isPublic = true;
-
-  const u = new URLSearchParams(window.location.search).get('u');
-  if (u) {
-    window._recipientUsername = normalize(u);
-    const tag = document.getElementById('send-recipient-tag');
-    tag.style.display = 'inline-flex';
-    tag.textContent = `✉️ Sending to @${window._recipientUsername}`;
-    document.getElementById('send-subtitle').textContent = `@${window._recipientUsername} will never know it was you.`;
-  } else {
-    document.getElementById('recipient-section').style.display = 'block';
-  }
-
-  function selectMood(el) {
-    document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
-    el.classList.add('selected');
-    selectedMood = el.dataset.mood;
-  }
-
-  function togglePublic() {
-    isPublic = !isPublic;
-    document.getElementById('public-toggle-switch').classList.toggle('on', isPublic);
-  }
-
-  async function sendMessage() {
-    const text      = document.getElementById('msg-text').value.trim();
-    const toEl      = document.getElementById('to-username');
-    const recipient = window._recipientUsername || normalize(toEl ? toEl.value : '') || null;
-
-    if (!text)         return showToast('Write something first 👀');
-    if (!selectedMood) return showToast('Pick a vibe first!');
-    if (!recipient)    return showToast('Who are you sending this to?');
-
-    const btn = document.getElementById('send-btn');
-    btn.disabled = true; btn.textContent = 'Sending...';
-
-    try {
-      await apiPost('/api/messages/send', {
-        message:            text,
-        mood:               selectedMood,
-        is_public:          isPublic,
-        recipient_username: recipient
-      });
-      document.getElementById('send-form-area').style.display = 'none';
-      document.getElementById('send-success').style.display   = 'block';
-    } catch(e) {
-      showToast(e.message || 'Failed to send. Try again.');
-      btn.disabled = false; btn.textContent = 'Send anonymously ✦';
-    }
-  }
-
-  function resetSend() {
-    document.getElementById('msg-text').value = '';
-    document.getElementById('char-count').textContent = '0';
-    selectedMood = null; isPublic = true;
-    document.getElementById('public-toggle-switch').classList.add('on');
-    document.querySelectorAll('.mood-option').forEach(o => o.classList.remove('selected'));
-    document.getElementById('send-form-area').style.display = 'block';
-    document.getElementById('send-success').style.display   = 'none';
-    const btn = document.getElementById('send-btn');
-    btn.disabled = false; btn.textContent = 'Send anonymously ✦';
-  }
-
-  attachScrollNav();
-</script>
+<script src="./js/send.js"></script>
 </body>
 </html>

@@ -1,0 +1,6 @@
+:root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
+    .btn { text-decoration: none;}
+    .send-hero { text-align:center; padding:1.5rem 1rem 1.1rem; }
+    .send-hero h2 { font-family:'Syne',sans-serif; font-size:1.55rem; font-weight:800; margin-bottom:0.3rem; }
+    .send-hero p { color:var(--muted); font-size:0.86rem; }
+    .recipient-tag { display:inline-flex; align-items:center; gap:0.4rem; background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); color:var(--accent-light); padding:0.26rem 0.8rem; border-radius:999px; font-size:0.76rem; font-weight:500; margin-bottom:0.85rem; }

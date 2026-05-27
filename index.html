@@ -5,6 +5,11 @@
   <title>Whispr — say it anonymously</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style/index.css"/>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="manifest" href="/site.webmanifest">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="./js/whispr.js"></script>
   <style id="page-style"></style>
@@ -39,7 +44,7 @@
 </nav>
 
 <div class="page-wrap">
-  <!-- FEED SECTION -->
+  
   <div id="section-feed">
     <div class="hero">
       <div class="hero-tag">✦ anonymous vibes only</div>
@@ -77,7 +82,7 @@
     <div id="feed-container"><div class="loading"><span></span><span></span><span></span></div></div>
   </div>
 
-  <!-- TRENDING SECTION -->
+  
   <div id="section-trending" style="display:none">
     <button class="back-btn" onclick="showFeed()">
       <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>Back to feed
@@ -88,7 +93,7 @@
   </div>
 </div>
 
-<!-- Share canvas -->
+
 <div id="share-canvas-host">
   <div class="share-card-inner" id="share-card-inner">
     <div class="share-badge" id="share-badge"></div>
@@ -97,185 +102,6 @@
   </div>
 </div>
 
-<style>
-  :root { --bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px; }
-  .btn { text-decoration: none;}
-  .hero { text-align:center; padding:2.5rem 1rem 2rem; }
-  .hero-tag { display:inline-block; background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); color:var(--accent-light); font-size:0.72rem; font-weight:500; padding:0.28rem 0.85rem; border-radius:999px; margin-bottom:1rem; letter-spacing:0.06em; text-transform:uppercase; }
-  .hero h1 { font-family:'Syne',sans-serif; font-size:clamp(1.8rem,6vw,3.2rem); font-weight:800; line-height:1.1; letter-spacing:-0.03em; margin-bottom:0.9rem; }
-  .hero h1 em { font-style:normal; color:var(--accent); }
-  .hero p { color:var(--muted); font-size:0.93rem; max-width:400px; margin:0 auto 1.8rem; line-height:1.65; }
-  .hero-actions { display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap; }
-  .trending-banner { display:flex; align-items:center; justify-content:space-between; background:linear-gradient(135deg,rgba(249,115,22,0.1),rgba(239,68,68,0.08)); border:1px solid rgba(249,115,22,0.25); border-radius:12px; padding:0.75rem 1rem; margin-bottom:1.2rem; cursor:pointer; transition:all 0.2s; }
-  .trending-banner:hover { border-color:rgba(249,115,22,0.5); transform:translateY(-1px); }
-  .trending-banner-left { display:flex; align-items:center; gap:0.6rem; }
-  .trending-banner-left span { font-family:'Syne',sans-serif; font-weight:700; font-size:0.88rem; }
-  .trending-fire { font-size:1.1rem; animation:pulse-fire 1.5s ease-in-out infinite; }
-  @keyframes pulse-fire { 0%,100%{transform:scale(1);}50%{transform:scale(1.15);} }
-  .trending-banner-right { font-size:0.72rem; color:var(--muted); display:flex; align-items:center; gap:0.3rem; }
-  .feed-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:1rem; flex-wrap:wrap; gap:0.6rem; }
-  .feed-title { font-family:'Syne',sans-serif; font-size:1rem; font-weight:700; }
-  .mood-filters { display:flex; gap:0.3rem; flex-wrap:wrap; }
-  .mood-chip { padding:0.26rem 0.65rem; border-radius:999px; font-size:0.68rem; font-weight:500; cursor:pointer; border:1px solid transparent; transition:all 0.2s; background:var(--surface); color:var(--muted); position:relative; }
-  .mood-chip:hover { color:var(--text); }
-  .mood-chip[data-mood="all"].active { border-color:var(--accent); color:var(--accent-light); background:rgba(124,58,237,0.1); }
-  .mood-chip[data-mood="😤 Vent"].active { border-color:var(--mood-vent); color:var(--mood-vent); background:rgba(239,68,68,0.1); }
-  .mood-chip[data-mood="💀 No Cap"].active { border-color:var(--mood-nocap); color:var(--mood-nocap); background:rgba(139,92,246,0.1); }
-  .mood-chip[data-mood="🥺 Feels"].active { border-color:var(--mood-feels); color:var(--mood-feels); background:rgba(236,72,153,0.1); }
-  .mood-chip[data-mood="🔥 Hot Take"].active { border-color:var(--mood-hottake); color:var(--mood-hottake); background:rgba(249,115,22,0.1); }
-  .mood-chip[data-mood="👀 Tea"].active { border-color:var(--mood-tea); color:var(--mood-tea); background:rgba(6,182,212,0.1); }
-  .mood-chip.top-mood::after { content:'👑'; position:absolute; top:-10px; right:-4px; font-size:0.7rem; animation:crown-bounce 1.8s ease-in-out infinite; }
-  .mood-chip.top-mood { box-shadow:0 0 10px rgba(250,204,21,0.25); }
-  @keyframes crown-bounce { 0%,100%{transform:translateY(0);}50%{transform:translateY(-2px);} }
-  .active-nav { color: var(--text) !important; border-color: var(--border) !important; }
-  @media(max-width:640px){.hero{padding:1.2rem 0.25rem 1rem;}.hero h1{font-size:1.75rem;}.feed-header{flex-direction:column;align-items:flex-start;}.mood-filters{gap:0.22rem;}}
-</style>
-
-<script>
-  document.getElementById('page-style').textContent = SHARED_CSS;
-
-  let currentFilter = 'all';
-
-  function showTrending() {
-    document.getElementById('section-feed').style.display     = 'none';
-    document.getElementById('section-trending').style.display = 'block';
-    loadTrending();
-    window.scrollTo(0,0);
-  }
-  function showFeed() {
-    document.getElementById('section-feed').style.display     = 'block';
-    document.getElementById('section-trending').style.display = 'none';
-    window.scrollTo(0,0);
-  }
-
-  // Handle #trending in URL
-  if (window.location.hash === '#trending') showTrending();
-
-  document.getElementById('nav-trending-btn').addEventListener('click', e => { e.preventDefault(); showTrending(); });
-  document.getElementById('bnav-trending').addEventListener('click', e => { e.preventDefault(); showTrending(); });
-
-  document.getElementById('page-style').textContent = SHARED_CSS;
-
-  function showTrending() {
-    document.getElementById('section-feed').style.display     = 'none';
-    document.getElementById('section-trending').style.display = 'block';
-    loadTrending();
-    window.scrollTo(0,0);
-  }
-  function showFeed() {
-    document.getElementById('section-feed').style.display     = 'block';
-    document.getElementById('section-trending').style.display = 'none';
-    window.scrollTo(0,0);
-  }
-
-  if (window.location.hash === '#trending') showTrending();
-  document.getElementById('nav-trending-btn').addEventListener('click', e => { e.preventDefault(); showTrending(); });
-  document.getElementById('bnav-trending').addEventListener('click',    e => { e.preventDefault(); showTrending(); });
-
-  async function loadFeed() {
-    const container = document.getElementById('feed-container');
-    container.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
-    try {
-      let path = `/api/messages/feed?page=0`;
-      if (currentFilter !== 'all') path += `&mood=${encodeURIComponent(currentFilter)}`;
-      const data = await apiGet(path);
-      if (!data.messages.length) {
-        container.innerHTML = `<div class="empty-state"><div class="emoji">👻</div><p>No messages in the last 72h. Be the first.</p></div>`;
-        return;
-      }
-      container.innerHTML = '<div class="messages-grid"></div>';
-      const grid = container.querySelector('.messages-grid');
-      data.messages.forEach((msg, i) => grid.innerHTML += renderCard(msg, i, { showReplyThread: true }));
-    } catch(e) {
-      container.innerHTML = `<div class="empty-state"><div class="emoji">😵</div><p>Couldn't load messages. Is the backend running?</p></div>`;
-      console.error(e);
-    }
-    loadTopMood();
-  }
-
-  async function loadTrending() {
-    const container = document.getElementById('trending-container');
-    container.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
-    try {
-      const data = await apiGet('/api/messages/trending');
-      if (!data.messages.length) {
-        container.innerHTML = `<div class="empty-state"><div class="emoji">🫙</div><p>No trending yet. Like some messages!</p></div>`;
-        return;
-      }
-      container.innerHTML = '<div class="messages-grid"></div>';
-      const grid = container.querySelector('.messages-grid');
-      data.messages.forEach((msg, i) => {
-        const rc = i===0?'gold':i===1?'silver':i===2?'bronze':'';
-        const rl = i===0?'🥇 #1':i===1?'🥈 #2':i===2?'🥉 #3':`#${i+1}`;
-        grid.innerHTML += renderCard(msg, i, { showRank: rl, rankClass: rc, showReplyThread: true });
-      });
-    } catch(e) {
-      container.innerHTML = `<div class="empty-state"><div class="emoji">😵</div><p>Couldn't load trending.</p></div>`;
-    }
-  }
-
-  async function loadTopMood() {
-    try {
-      const data = await apiGet('/api/messages/top-mood');
-      if (!data.topMood) return;
-      document.querySelectorAll('.mood-chip').forEach(c => {
-        c.classList.remove('top-mood');
-        // Compare trimmed strings to avoid whitespace issues
-        if (c.dataset.mood && c.dataset.mood.trim() === data.topMood.trim()) {
-          c.classList.add('top-mood');
-        }
-      });
-    } catch(e) { console.error('top mood error', e); }
-  }
-
-  function filterMood(mood, el) {
-    currentFilter = mood;
-    document.querySelectorAll('.mood-chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
-    loadFeed();
-  }
-
-  let lastMessageCount = 0;
-  let newMessageDot    = false;
-
-  async function checkForNewMessages() {
-    try {
-      const data = await apiGet('/api/messages/feed?page=0');
-      const count = data.total || 0;
-      if (lastMessageCount > 0 && count > lastMessageCount && !newMessageDot) {
-        newMessageDot = true;
-        // Add dot to feed nav icon
-        document.querySelectorAll('.bottom-nav-item[href="index.html"], a[href="index.html"].btn-ghost').forEach(el => {
-          if (!el.querySelector('.new-dot')) {
-            const dot = document.createElement('span');
-            dot.className = 'new-dot';
-            dot.style.cssText = 'width:7px;height:7px;background:#7c3aed;border-radius:50%;position:absolute;top:4px;right:4px;animation:pulse-dot 1.5s ease-in-out infinite;';
-            el.style.position = 'relative';
-            el.appendChild(dot);
-          }
-        });
-      }
-      lastMessageCount = count;
-    } catch(e) {}
-  }
-
-  // Add pulse animation to page CSS
-  const style = document.createElement('style');
-  style.textContent = '@keyframes pulse-dot{0%,100%{transform:scale(1);opacity:1;}50%{transform:scale(1.3);opacity:0.7;}}';
-  document.head.appendChild(style);
-
-  // Check every 30 seconds
-  setInterval(checkForNewMessages, 30000);
-  // Clear dot when feed reloads
-  const _origLoadFeed = loadFeed;
-  loadFeed = async function() {
-    newMessageDot = false;
-    document.querySelectorAll('.new-dot').forEach(d => d.remove());
-    await _origLoadFeed();
-  };
-
-  attachScrollNav();
-  loadFeed();
-</script>
+<script src="./js/index.js"></script>
 </body>
 </html>

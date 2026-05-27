@@ -1,0 +1,39 @@
+:root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
+    .btn { text-decoration: none;}
+    .view-inbox-form { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.3rem; margin:1.2rem auto; max-width:460px; }
+    .view-inbox-form h3 { font-family:'Syne',sans-serif; font-weight:700; margin-bottom:0.35rem; font-size:1.15rem; }
+    .view-inbox-form > p { color:var(--muted); font-size:0.82rem; margin-bottom:1rem; }
+    .inbox-header { display:flex; align-items:center; gap:0.7rem; margin-bottom:1.1rem; flex-wrap:wrap; }
+    .inbox-title { font-family:'Syne',sans-serif; font-size:1.25rem; font-weight:800; }
+    .inbox-count { background:var(--accent); color:white; font-size:0.66rem; font-weight:700; padding:0.16rem 0.5rem; border-radius:999px; }
+    .reply-limit-bar { display:flex; align-items:center; justify-content:space-between; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:0.6rem 0.9rem; margin-bottom:1rem; font-size:0.8rem; }
+    .reply-limit-text { color:var(--muted); }
+    .reply-limit-text strong { color:var(--text); }
+    .upgrade-link { color:var(--accent-light); font-size:0.75rem; font-weight:600; cursor:pointer; text-decoration:none; }
+    .upgrade-link:hover { color:var(--accent); }
+    /* REPLY DRAWER */
+    .reply-drawer { position:fixed; inset:0; z-index:400; display:flex; align-items:flex-end; justify-content:center; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); animation:fadeIn 0.2s ease; }
+    .reply-drawer.hidden { display:none; }
+    .reply-sheet { background:var(--surface); border:1px solid var(--border); border-radius:20px 20px 0 0; padding:1.2rem; width:100%; max-width:500px; animation:slideUp 0.3s cubic-bezier(0.34,1.2,0.64,1); }
+    .reply-sheet-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 1rem; }
+    .reply-quoted { background:var(--bg); border:1px solid var(--border); border-left:3px solid var(--accent); border-radius:8px; padding:0.6rem 0.8rem; margin-bottom:1rem; font-size:0.8rem; color:var(--muted); line-height:1.5; }
+    .reply-quoted strong { color:var(--text); display:block; font-size:0.72rem; margin-bottom:0.2rem; }
+    .reply-actions { display:flex; gap:0.6rem; margin-top:0.6rem; }
+    .reply-cancel { flex:1; padding:0.75rem; border-radius:10px; border:1px solid var(--border); background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.88rem; cursor:pointer; transition:all 0.2s; }
+    .reply-cancel:hover { color:var(--text); border-color:var(--muted); }
+    .reply-submit { flex:2; padding:0.75rem; border-radius:10px; background:var(--accent); color:white; font-family:'Syne',sans-serif; font-size:0.88rem; font-weight:700; border:none; cursor:pointer; transition:all 0.2s; }
+    .reply-submit:hover:not(:disabled) { background:#6d28d9; }
+    .reply-submit:disabled { opacity:0.5; cursor:not-allowed; }
+    /* PAYWALL MODAL */
+    .paywall-pack { background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:1rem; margin-bottom:0.65rem; display:flex; align-items:center; justify-content:space-between; cursor:pointer; transition:all 0.2s; }
+    .paywall-pack:hover { border-color:var(--accent); transform:translateX(3px); }
+    .paywall-pack.best { border-color:rgba(124,58,237,0.4); background:rgba(124,58,237,0.06); }
+    .pack-left { display:flex; flex-direction:column; gap:0.2rem; }
+    .pack-name { font-family:'Syne',sans-serif; font-weight:700; font-size:0.9rem; }
+    .pack-desc { font-size:0.74rem; color:var(--muted); }
+    .pack-badge { font-size:0.6rem; font-weight:700; background:var(--accent); color:white; padding:0.12rem 0.5rem; border-radius:999px; margin-left:0.4rem; vertical-align:middle; }
+    .pack-price { font-family:'Syne',sans-serif; font-weight:800; font-size:1rem; color:var(--accent-light); }
+    .pack-price span { font-size:0.7rem; color:var(--muted); font-weight:400; }
+    .paywall-note { font-size:0.72rem; color:var(--muted); text-align:center; margin-top:0.5rem; line-height:1.5; }
+    @keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+    @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
