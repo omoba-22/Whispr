@@ -275,3 +275,42 @@ document.getElementById('page-style').textContent = SHARED_CSS;
   }
 
   attachScrollNav();
+
+ // Pull to refresh
+  (function() {
+    let startY = 0, pulling = false, triggered = false;
+    const indicator = document.getElementById('pull-indicator');
+
+    document.addEventListener('touchstart', (e) => {
+      if (window.scrollY === 0) {
+        startY   = e.touches[0].clientY;
+        pulling  = true;
+        triggered = false;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!pulling) return;
+      const dist = e.touches[0].clientY - startY;
+      if (dist > 20 && dist < 100) {
+        indicator.style.opacity = `${dist / 80}`;
+        indicator.textContent   = '↓ Pull to refresh';
+      }
+      if (dist >= 80 && !triggered) {
+        triggered               = true;
+        indicator.textContent   = '↑ Release to refresh';
+        indicator.style.opacity = '1';
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', async () => {
+      if (!pulling) return;
+      pulling = false;
+      if (triggered && currentUsername) {
+        indicator.textContent = '⟳ Refreshing...';
+        await loadInbox();
+        await updateReplyCounter();
+      }
+      setTimeout(() => { indicator.style.opacity = '0'; }, 800);
+    });
+  })(); 

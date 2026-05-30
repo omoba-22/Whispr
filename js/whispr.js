@@ -172,19 +172,35 @@ function attachSwipeListeners(container, onSwipeRight) {
   });
 }
 
-async function shareAsImage(message, mood) {
+async function shareAsImage(message, mood, context = 'feed') {
   if (typeof html2canvas === 'undefined') { showToast('Share not available.'); return; }
   showToast('Generating image...');
-  const key = moodKey(mood);
+  const key   = moodKey(mood);
   const host  = document.getElementById('share-canvas-host');
   const inner = document.getElementById('share-card-inner');
   const badge = document.getElementById('share-badge');
   const text  = document.getElementById('share-msg-text');
+  const ctx   = document.getElementById('share-context');
   if (!host) return showToast('Share not available here.');
+
   inner.className   = `share-card-inner share-card-mood-bar-${key}`;
   badge.className   = `share-badge share-badge-${key}`;
   badge.textContent = mood;
   text.textContent  = `"${message}"`;
+
+  // Set context label
+  if (ctx) {
+    if (context === 'inbox') {
+      ctx.textContent = 'someone said this to me anonymously';
+      ctx.style.display = 'block';
+    } else if (context === 'reply') {
+      ctx.textContent = 'my anonymous reply';
+      ctx.style.display = 'block';
+    } else {
+      ctx.style.display = 'none';
+    }
+  }
+
   try {
     const canvas = await html2canvas(host, { backgroundColor: '#0a0a0f', scale: 2, useCORS: true, logging: false });
     canvas.toBlob(async (blob) => {
@@ -255,7 +271,7 @@ function renderCard(msg, i, opts = {}) {
           <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
           <span class="like-count">${likes}</span>
         </button>
-        <button class="share-img-btn" onclick="shareAsImage('${msgEsc}','${moodEsc}')">
+        <button class="share-img-btn" onclick="shareAsImage('${msgEsc}','${moodEsc}','${inInbox ? 'inbox' : 'feed'}')">
           <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
           Share
         </button>

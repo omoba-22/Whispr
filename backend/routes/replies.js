@@ -136,9 +136,9 @@ router.post('/send', general, async (req, res) => {
     }
 
     const newLimit     = hasUnlimited ? -1 : FREE_REPLY_LIMIT + Math.max(0, paidReplies - (used >= FREE_REPLY_LIMIT ? 1 : 0));
-    const remaining    = hasUnlimited ? -1 : Math.max(0, newLimit - newCount);
+    const remaining = hasUnlimited ? -1 : Math.max(0, totalAllowed - newCount);
 
-    return res.json({ ok: true, used: newCount, remaining });
+    return res.json({ ok: true, used: newCount, limit: totalAllowed, remaining });
   } catch(err) {
     console.error('[replies/send]', err);
     return res.status(500).json({ error: 'Server error.' });

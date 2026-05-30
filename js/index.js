@@ -142,3 +142,5 @@ document.getElementById('page-style').textContent = SHARED_CSS;
 
   attachScrollNav();
   loadFeed();
+ 
+  
