@@ -51,3 +51,5 @@ document.getElementById('page-style').textContent = SHARED_CSS;
   if (savedUsername) document.getElementById('username-input').value = savedUsername;
 
   attachScrollNav();
+ // Show page after CSS is injected
+  document.querySelector('.page-wrap').classList.add('ready'); 

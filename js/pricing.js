@@ -139,3 +139,5 @@ let selectedPackId = null;
   if (preselected) setTimeout(() => buyPack(preselected), 400);
 
   attachScrollNav();
+  // Show page after CSS is injected
+  document.querySelector('.page-wrap').classList.add('ready');

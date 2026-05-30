@@ -1,5 +1,8 @@
 :root { --bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px; }
-  .btn { text-decoration: none;}
+body { background: var(--bg); color: var(--text); }
+  .page-wrap { opacity: 0; transition: opacity 0.15s ease; }
+  .page-wrap.ready { opacity: 1; }
+.btn { text-decoration: none;}
   .hero { text-align:center; padding:2.5rem 1rem 2rem; }
   .hero-tag { display:inline-block; background:rgba(124,58,237,0.15); border:1px solid rgba(124,58,237,0.3); color:var(--accent-light); font-size:0.72rem; font-weight:500; padding:0.28rem 0.85rem; border-radius:999px; margin-bottom:1rem; letter-spacing:0.06em; text-transform:uppercase; }
   .hero h1 { font-family:'Syne',sans-serif; font-size:clamp(1.8rem,6vw,3.2rem); font-weight:800; line-height:1.1; letter-spacing:-0.03em; margin-bottom:0.9rem; }

@@ -1,5 +1,8 @@
 :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
-    .btn { text-decoration: none;}
+body { background: var(--bg); color: var(--text); }
+  .page-wrap { opacity: 0; transition: opacity 0.15s ease; }
+  .page-wrap.ready { opacity: 1; }
+.btn { text-decoration: none;}
     .view-inbox-form { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:1.3rem; margin:1.2rem auto; max-width:460px; }
     .view-inbox-form h3 { font-family:'Syne',sans-serif; font-weight:700; margin-bottom:0.35rem; font-size:1.15rem; }
     .view-inbox-form > p { color:var(--muted); font-size:0.82rem; margin-bottom:1rem; }

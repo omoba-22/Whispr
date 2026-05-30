@@ -314,3 +314,5 @@ document.getElementById('page-style').textContent = SHARED_CSS;
       setTimeout(() => { indicator.style.opacity = '0'; }, 800);
     });
   })(); 
+  // Show page after CSS is injected
+  document.querySelector('.page-wrap').classList.add('ready');

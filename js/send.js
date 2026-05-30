@@ -63,3 +63,5 @@ document.getElementById('page-style').textContent = SHARED_CSS;
   }
 
   attachScrollNav();
+  // Show page after CSS is injected
+  document.querySelector('.page-wrap').classList.add('ready');

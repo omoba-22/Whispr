@@ -38,6 +38,46 @@ document.getElementById('page-style').textContent = SHARED_CSS;
   document.getElementById('nav-trending-btn').addEventListener('click', e => { e.preventDefault(); showTrending(); });
   document.getElementById('bnav-trending').addEventListener('click',    e => { e.preventDefault(); showTrending(); });
 
+  // Pull to refresh on feed
+  (function() {
+    let startY = 0, pulling = false, triggered = false;
+    const indicator = document.getElementById('pull-indicator-feed');
+
+    document.addEventListener('touchstart', (e) => {
+      if (window.scrollY === 0) {
+        startY    = e.touches[0].clientY;
+        pulling   = true;
+        triggered = false;
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchmove', (e) => {
+      if (!pulling) return;
+      const dist = e.touches[0].clientY - startY;
+      if (dist > 20 && dist < 100 && indicator) {
+        indicator.style.opacity = `${dist / 80}`;
+        indicator.textContent   = '↓ Pull to refresh';
+      }
+      if (dist >= 80 && !triggered) {
+        triggered               = true;
+        if (indicator) {
+          indicator.textContent   = '↑ Release to refresh';
+          indicator.style.opacity = '1';
+        }
+      }
+    }, { passive: true });
+
+    document.addEventListener('touchend', async () => {
+      if (!pulling) return;
+      pulling = false;
+      if (triggered) {
+        if (indicator) indicator.textContent = '⟳ Refreshing...';
+        await loadFeed();
+      }
+      setTimeout(() => { if (indicator) indicator.style.opacity = '0'; }, 800);
+    });
+  })();
+
   async function loadFeed() {
     const container = document.getElementById('feed-container');
     container.innerHTML = '<div class="loading"><span></span><span></span><span></span></div>';
@@ -143,4 +183,5 @@ document.getElementById('page-style').textContent = SHARED_CSS;
   attachScrollNav();
   loadFeed();
  
-  
+  // Show page after CSS is injected
+  document.querySelector('.page-wrap').classList.add('ready');

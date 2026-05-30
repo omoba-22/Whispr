@@ -1,5 +1,8 @@
 :root{--bg:#0a0a0f;--surface:#111118;--border:#1e1e2e;--text:#e8e8f0;--muted:#6b6b80;--accent:#7c3aed;--accent-light:#a78bfa;--mood-vent:#ef4444;--mood-nocap:#8b5cf6;--mood-feels:#ec4899;--mood-hottake:#f97316;--mood-tea:#06b6d4;--bottom-nav-h:64px;}
-    .btn { text-decoration: none;}
+body { background: var(--bg); color: var(--text); }
+  .page-wrap { opacity: 0; transition: opacity 0.15s ease; }
+  .page-wrap.ready { opacity: 1; }   
+.btn { text-decoration: none;}
     .pricing-hero { text-align: center; padding: 2.5rem 1rem 2rem; }
     .pricing-hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(1.8rem, 5vw, 2.8rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.75rem; }
     .pricing-hero h1 em { font-style: normal; color: var(--accent); }
