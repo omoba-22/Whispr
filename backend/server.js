@@ -45,6 +45,9 @@ app.use(cors({
 
 app.options('*', cors());
 
+// Raw body for Paystack webhook verification
+app.use('/api/payment/webhook', express.raw({ type: 'application/json' }));
+
 /* ── BODY PARSING ── */
 app.use(express.json({ limit: '10kb' })); // limit body size
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));

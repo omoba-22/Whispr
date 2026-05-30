@@ -202,4 +202,75 @@ router.get('/status', general, async (req, res) => {
   }
 });
 
+const crypto = require('crypto');
+
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    // Verify the webhook is actually from Paystack
+    const hash = crypto
+      .createHmac('sha512', PAYSTACK_SECRET)
+      .update(req.body)
+      .digest('hex');
+
+    if (hash !== req.headers['x-paystack-signature']) {
+      return res.status(401).send('Invalid signature');
+    }
+
+    const event = JSON.parse(req.body);
+
+    if (event.event === 'charge.success') {
+      const reference = event.data.reference;
+
+      // Check payment exists and is pending
+      const { data: payment } = await supabase
+        .from('payments')
+        .select('*')
+        .eq('reference', reference)
+        .eq('status', 'pending')
+        .maybeSingle();
+
+      if (!payment) return res.sendStatus(200); // already processed or not found
+
+      const pack     = PACKS[payment.pack_id];
+      const username = payment.username;
+
+      // Fetch current user state
+      const { data: userData } = await supabase
+        .from('users')
+        .select('paid_replies, unlimited_until, pending_replies')
+        .eq('username', username)
+        .maybeSingle();
+
+      const hasActiveSavage = userData?.unlimited_until && new Date(userData.unlimited_until) > new Date();
+      const currentPaid     = userData?.paid_replies   || 0;
+      const currentPending  = userData?.pending_replies || 0;
+
+      let updateData = {};
+
+      if (payment.pack_id === 'savage') {
+        const expiryDate = new Date(Date.now() + 30*24*60*60*1000).toISOString();
+        updateData = { unlimited_until: expiryDate };
+      } else {
+        if (hasActiveSavage) {
+          updateData = { pending_replies: currentPending + pack.replies };
+        } else {
+          updateData = { paid_replies: currentPaid + pack.replies };
+        }
+      }
+
+      await supabase.from('users').update(updateData).eq('username', username);
+      await supabase.from('payments')
+        .update({ status: 'success', verified_at: new Date().toISOString() })
+        .eq('reference', reference);
+
+      console.log(`✅ Payment activated: ${username} → ${payment.pack_id}`);
+    }
+
+    res.sendStatus(200);
+  } catch(err) {
+    console.error('[webhook]', err);
+    res.sendStatus(500);
+  }
+});
+
 module.exports = router;
