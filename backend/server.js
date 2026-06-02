@@ -56,7 +56,14 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(sanitizeBody);
 
 /* ── GLOBAL RATE LIMIT ── */
-app.use('/api/', general);
+const globalLimit = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please slow down.' }
+});
+app.use('/api/', globalLimit);
 
 /* ── ROUTES ── */
 app.use('/api/auth',     authRoutes);
