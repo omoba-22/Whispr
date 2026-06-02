@@ -14,13 +14,14 @@ function getMonthKey() {
 async function getUserStatus(username) {
   const { data } = await supabase
     .from('users')
-    .select('paid_replies, unlimited_until, pending_replies')
+    .select('paid_replies, unlimited_until, pending_replies, total_paid_replies')
     .eq('username', username)
     .maybeSingle();
-  const hasUnlimited = data?.unlimited_until && new Date(data.unlimited_until) > new Date();
-  const paidReplies  = data?.paid_replies  || 0;
-  const pending      = data?.pending_replies || 0;
-  return { hasUnlimited, paidReplies, pending, unlimited_until: data?.unlimited_until };
+  const hasUnlimited     = data?.unlimited_until && new Date(data.unlimited_until) > new Date();
+  const paidReplies      = data?.paid_replies       || 0;
+  const totalPaidReplies = data?.total_paid_replies  || 0;
+  const pending          = data?.pending_replies     || 0;
+  return { hasUnlimited, paidReplies, totalPaidReplies, pending, unlimited_until: data?.unlimited_until };
 }
 
 async function getUsedCount(username) {
@@ -41,25 +42,28 @@ router.get('/count', general, async (req, res) => {
     const username = verifySession(token);
     if (!username) return res.status(401).json({ error: 'Not authenticated.' });
 
-    const { hasUnlimited, paidReplies, pending, unlimited_until } = await getUserStatus(username);
+    const { hasUnlimited, paidReplies, totalPaidReplies, pending, unlimited_until } = await getUserStatus(username);
     const { used } = await getUsedCount(username);
 
-    // If savage pass just expired, move pending to paid
+    // Savage pass just expired — move pending to paid
     if (!hasUnlimited && unlimited_until && pending > 0) {
-      await supabase.from('users')
-        .update({ paid_replies: paidReplies + pending, pending_replies: 0 })
-        .eq('username', username);
+      await supabase.from('users').update({
+        paid_replies:       paidReplies + pending,
+        total_paid_replies: totalPaidReplies + pending,
+        pending_replies:    0
+      }).eq('username', username);
     }
 
-    const limit = hasUnlimited ? -1 : FREE_REPLY_LIMIT + paidReplies;
+    const limit = hasUnlimited ? -1 : FREE_REPLY_LIMIT + totalPaidReplies;
 
     return res.json({
       used,
       limit,
-      remaining:     hasUnlimited ? -1 : Math.max(0, limit - used),
-      has_unlimited: !!hasUnlimited,
-      paid_replies:  paidReplies,
-      pending_replies: pending
+      remaining:          hasUnlimited ? -1 : Math.max(0, limit - used),
+      has_unlimited:      !!hasUnlimited,
+      paid_replies:       paidReplies,
+      total_paid_replies: totalPaidReplies,
+      pending_replies:    pending
     });
   } catch(err) {
     console.error('[replies/count]', err);
@@ -83,7 +87,6 @@ router.post('/send', general, async (req, res) => {
     }
     if (!replyToId) return res.status(400).json({ error: 'Target message is required.' });
 
-    // Verify message belongs to this user
     const { data: msg, error: msgErr } = await supabase
       .from('messages')
       .select('id, recipient_username, reply_text')
@@ -95,10 +98,10 @@ router.post('/send', general, async (req, res) => {
       return res.status(403).json({ error: 'You can only reply to your own messages.' });
     }
 
-    // Check limits
-    const { hasUnlimited, paidReplies } = await getUserStatus(username);
+    // Get limits — destructure totalPaidReplies properly
+    const { hasUnlimited, paidReplies, totalPaidReplies } = await getUserStatus(username);
     const { used, monthKey } = await getUsedCount(username);
-    const totalAllowed = hasUnlimited ? Infinity : FREE_REPLY_LIMIT + paidReplies;
+    const totalAllowed = hasUnlimited ? Infinity : FREE_REPLY_LIMIT + totalPaidReplies;
 
     if (!hasUnlimited && used >= totalAllowed) {
       return res.status(402).json({ error: 'Reply limit reached.', upgrade: true });
@@ -111,7 +114,7 @@ router.post('/send', general, async (req, res) => {
       .eq('id', replyToId);
     if (updErr) throw updErr;
 
-    // Also insert as a reply message for the feed
+    // Insert as reply message for feed
     await supabase.from('messages').insert({
       message:     replyText,
       mood:        '↩️ Reply',
@@ -128,17 +131,18 @@ router.post('/send', general, async (req, res) => {
       { onConflict: 'username,month_key' }
     );
 
-    // Deduct paid reply if used beyond free limit
+    // Deduct from paid_replies if used beyond free limit
     if (!hasUnlimited && used >= FREE_REPLY_LIMIT && paidReplies > 0) {
       await supabase.from('users')
         .update({ paid_replies: paidReplies - 1 })
         .eq('username', username);
     }
 
-    const newLimit     = hasUnlimited ? -1 : FREE_REPLY_LIMIT + Math.max(0, paidReplies - (used >= FREE_REPLY_LIMIT ? 1 : 0));
-    const remaining = hasUnlimited ? -1 : Math.max(0, totalAllowed - newCount);
+    // total_paid_replies never changes — it's the fixed denominator
+    const newLimit    = hasUnlimited ? -1 : FREE_REPLY_LIMIT + totalPaidReplies;
+    const remaining   = hasUnlimited ? -1 : Math.max(0, newLimit - newCount);
 
-    return res.json({ ok: true, used: newCount, limit: totalAllowed, remaining });
+    return res.json({ ok: true, used: newCount, limit: newLimit, remaining });
   } catch(err) {
     console.error('[replies/send]', err);
     return res.status(500).json({ error: 'Server error.' });

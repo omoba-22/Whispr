@@ -1,0 +1,107 @@
+so i did a deep dive with chatgpt about the bug i told you about early and this is what we came up with and we noticed 
+Bug:
+The reply counter is supposed to show:
+
+* Free replies = 3
+* Starter Pack = 5 replies
+* Total allowance = 8 replies
+Expected behavior:
+
+* 3/8 after purchase
+* 4/8 after using one premium reply
+* 5/8 after using another premium reply
+Actual behavior:
+
+* 3/8 after purchase
+* 4/7 after using one premium reply
+* 5/6 after using another premium reply
+Cause:
+The backend uses the same `paid_replies` field for two different purposes:
+
+1. Remaining premium reply credits
+2. Total purchased premium replies
+In `/api/replies/count`, the limit is calculated as:
+
+```js
+const limit = FREE_REPLY_LIMIT + paidReplies;
+
+```
+
+But in `/api/replies/send`, every premium reply reduces:
+
+```js
+paid_replies = paidReplies - 1
+
+```
+
+So after buying 5 replies:
+
+```txt
+paid_replies = 5
+limit = 3 + 5 = 8
+
+```
+
+After using one premium reply:
+
+```txt
+paid_replies = 4
+limit = 3 + 4 = 7
+
+```
+
+After using another:
+
+```txt
+paid_replies = 3
+limit = 3 + 3 = 6
+
+```
+
+This causes the denominator to shrink from 8 → 7 → 6.
+The frontend is not the issue. It displays `data.used / data.limit` exactly as returned by the backend.
+Fix:
+Separate "remaining credits" from "total purchased credits".
+Add a new field such as:
+
+```sql
+total_paid_replies integer default 0
+
+```
+
+When a user purchases a pack:
+
+```js
+paid_replies += pack.replies
+total_paid_replies += pack.replies
+
+```
+
+When a premium reply is used:
+
+```js
+paid_replies -= 1
+
+```
+
+Do NOT reduce `total_paid_replies`.
+Then calculate the limit using:
+
+```js
+const limit = FREE_REPLY_LIMIT + total_paid_replies;
+
+```
+
+This keeps the denominator fixed:
+
+```txt
+3/8
+4/8
+5/8
+6/8
+...
+8/8
+
+```
+
+while `paid_replies` continues to track the remaining premium credits.
