@@ -62,6 +62,12 @@
       </div>
     </div>
 
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem;">
+      <button onclick="logoutInbox()" style="padding:0.4rem 0.9rem;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:0.75rem;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all 0.2s;" onmouseover="this.style.color='#ef4444';this.style.borderColor='#ef4444'" onmouseout="this.style.color='var(--muted)';this.style.borderColor='var(--border)'">
+        Log out of inbox
+      </button>
+    </div>
+
     <div class="reply-limit-bar">
       <div class="reply-limit-text">Replies this month: <strong id="reply-used-display">0</strong> / <strong id="reply-limit-display">3</strong></div>
       <a class="upgrade-link" href="pricing.html">Get more replies ✦</a>

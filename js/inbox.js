@@ -314,5 +314,18 @@ document.getElementById('page-style').textContent = SHARED_CSS;
       setTimeout(() => { indicator.style.opacity = '0'; }, 800);
     });
   })(); 
+
+  function logoutInbox() {
+    clearSession();
+    currentUsername = null;
+    repliesUsed     = 0;
+    replyLimit      = 3;
+    document.getElementById('inbox-messages').style.display = 'none';
+    document.getElementById('inbox-login').style.display    = 'block';
+    document.getElementById('inbox-username').value = '';
+    document.getElementById('inbox-secret').value   = '';
+    showToast('Logged out of inbox');
+  }
+
   // Show page after CSS is injected
   document.querySelector('.page-wrap').classList.add('ready');

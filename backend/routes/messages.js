@@ -188,15 +188,24 @@ router.get('/inbox/:username', general, async (req, res) => {
 // In-memory like tracker: Map<messageId, Set<ip>>
 const likeTracker = new Map();
 
+const crypto = require('crypto');
+
 router.post('/like/:id', like, async (req, res) => {
   try {
-    const id = req.params.id;
-    const ip = req.ip || req.connection.remoteAddress;
+    const id     = req.params.id;
+    const rawIP  = req.ip || req.connection.remoteAddress || 'unknown';
+    // Hash the IP for privacy
+    const ipHash = crypto.createHash('sha256').update(rawIP).digest('hex');
 
-    if (!likeTracker.has(id)) likeTracker.set(id, new Set());
-    const likers = likeTracker.get(id);
+    // Check if already liked
+    const { data: existing } = await supabase
+      .from('message_likes')
+      .select('id')
+      .eq('message_id', id)
+      .eq('ip_hash', ipHash)
+      .maybeSingle();
 
-    // Fetch current likes
+    // Get current likes
     const { data: msg, error: fetchErr } = await supabase
       .from('messages')
       .select('likes')
@@ -209,27 +218,23 @@ router.post('/like/:id', like, async (req, res) => {
     let newLikes;
     let action;
 
-    if (likers.has(ip)) {
-      // Unlike
-      likers.delete(ip);
+    if (existing) {
+      // Unlike — remove record
+      await supabase.from('message_likes').delete()
+        .eq('message_id', id).eq('ip_hash', ipHash);
       newLikes = Math.max(0, (msg.likes || 0) - 1);
-      action = 'unliked';
+      action   = 'unliked';
     } else {
-      // Like
-      likers.add(ip);
+      // Like — add record
+      await supabase.from('message_likes').insert({ message_id: id, ip_hash: ipHash });
       newLikes = (msg.likes || 0) + 1;
-      action = 'liked';
+      action   = 'liked';
     }
 
-    const { error: updateErr } = await supabase
-      .from('messages')
-      .update({ likes: newLikes })
-      .eq('id', id);
-
-    if (updateErr) throw updateErr;
+    await supabase.from('messages').update({ likes: newLikes }).eq('id', id);
     return res.json({ ok: true, likes: newLikes, action });
 
-  } catch (err) {
+  } catch(err) {
     console.error('[messages/like]', err);
     return res.status(500).json({ error: 'Server error.' });
   }
