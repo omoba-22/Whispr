@@ -1,0 +1,151 @@
+about the likes behaviour, i think the tracking of likes with an ip is bad because, what if 100 students connect to a single wifi that means they can't like a message and evrythign =1 so here's what i discussed with chatgpt and this was what it propoosed 
+
+Yeah, after seeing the backend, I don't think the frontend code you pasted is the culprit.
+
+The behavior you described:
+
+Device A likes → 1 Device B likes → 0 Device C likes → 1
+
+is almost a textbook symptom of IP-based toggling.
+
+Look at your backend again:
+
+
+
+const rawIP = req.ip || req.connection.remoteAddress || 'unknown';
+const ipHash = crypto.createHash('sha256').update(rawIP).digest('hex');
+
+Then:
+
+
+
+const { data: existing } = await supabase
+  .from('message_likes')
+  .select('id')
+  .eq('message_id', id)
+  .eq('ip_hash', ipHash)
+  .maybeSingle();
+
+If the IP already exists:
+
+
+
+if (existing) {
+  // unlike
+}
+
+So if all your devices are on the same WiFi, they all share the same public IP.
+
+To Whispr:
+
+
+
+iPhone     = 102.xxx.xxx.xxx
+Android    = 102.xxx.xxx.xxx
+Laptop     = 102.xxx.xxx.xxx
+
+All identical.
+
+There's a quick test you can do right now.
+
+Test 1
+
+Like a message on:
+
+
+
+
+
+ your phone using WiFi 
+
+Then:
+
+
+
+
+
+ turn off WiFi 
+
+
+
+ switch to MTN/Airtel mobile data 
+
+Like the same message.
+
+If the likes become:
+
+
+
+0 -> 1 -> 2
+
+then we've basically confirmed the bug.
+
+Another thing
+
+You actually have a bigger issue.
+
+Your likes are stored by IP.
+
+That means if your entire department is on the same campus WiFi someday:
+
+
+
+100 students
+1 WiFi
+1 public IP
+
+Only one like may count.
+
+That's not what you want.
+
+For Whispr, I'd probably move away from IP tracking entirely.
+
+Since you already have authenticated users for inboxes and premium, a better approach is:
+
+
+
+message_likes
+-------------
+message_id
+user_id
+
+One like per logged-in user.
+
+Or if you want anonymous feed visitors to like:
+
+
+
+message_id
+device_id
+
+where device_id is generated once and stored in localStorage.
+
+Example:
+
+
+
+localStorage.whisprDeviceId
+
+If it doesn't exist:
+
+
+
+crypto.randomUUID()
+
+Store it forever.
+
+Then send it with every like request.
+
+Now:
+
+
+
+iPhone = device A
+Android = device B
+Laptop = device C
+
+all count separately even on the same WiFi.
+
+Before changing code though, I'd do the WiFi/mobile-data test first.
+
+If it works on different networks but breaks on the same WiFi, you've found the root cause with almost 100% certainty.
