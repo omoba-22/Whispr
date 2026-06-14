@@ -198,10 +198,8 @@ router.post('/like/:id', like, async (req, res) => {
   try {
     const id     = req.params.id;
     const rawIP  = req.ip || req.connection.remoteAddress || 'unknown';
-    // Hash the IP for privacy
     const ipHash = crypto.createHash('sha256').update(rawIP).digest('hex');
 
-    // Check if already liked
     const { data: existing } = await supabase
       .from('message_likes')
       .select('id')
@@ -209,34 +207,24 @@ router.post('/like/:id', like, async (req, res) => {
       .eq('ip_hash', ipHash)
       .maybeSingle();
 
-    // Get current likes
-    const { data: msg, error: fetchErr } = await supabase
-      .from('messages')
-      .select('likes')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (fetchErr) throw fetchErr;
-    if (!msg) return res.status(404).json({ error: 'Message not found.' });
-
-    let newLikes;
     let action;
 
     if (existing) {
-      // Unlike — remove record
       await supabase.from('message_likes').delete()
         .eq('message_id', id).eq('ip_hash', ipHash);
-      newLikes = Math.max(0, (msg.likes || 0) - 1);
-      action   = 'unliked';
+      await supabase.rpc('decrement_likes', { message_id: id });
+      action = 'unliked';
     } else {
-      // Like — add record
       await supabase.from('message_likes').insert({ message_id: id, ip_hash: ipHash });
-      newLikes = (msg.likes || 0) + 1;
-      action   = 'liked';
+      await supabase.rpc('increment_likes', { message_id: id });
+      action = 'liked';
     }
 
-    await supabase.from('messages').update({ likes: newLikes }).eq('id', id);
-    // Track like/unlike for challenge
+    // Get accurate count after update
+    const { data: updated } = await supabase
+      .from('messages').select('likes').eq('id', id).maybeSingle();
+    const newLikes = updated?.likes || 0;
+
     const { verifySession } = require('./auth');
     const likeToken    = (req.headers.authorization || '').replace('Bearer ', '');
     const likeUsername = verifySession(likeToken);
@@ -246,7 +234,6 @@ router.post('/like/:id', like, async (req, res) => {
     }
 
     return res.json({ ok: true, likes: newLikes, action });
-
   } catch(err) {
     console.error('[messages/like]', err);
     return res.status(500).json({ error: 'Server error.' });
