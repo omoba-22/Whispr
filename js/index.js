@@ -17,27 +17,6 @@ document.getElementById('page-style').textContent = SHARED_CSS;
   // Handle #trending in URL
   if (window.location.hash === '#trending') showTrending();
 
-  document.getElementById('nav-trending-btn').addEventListener('click', e => { e.preventDefault(); showTrending(); });
-  document.getElementById('bnav-trending').addEventListener('click', e => { e.preventDefault(); showTrending(); });
-
-  document.getElementById('page-style').textContent = SHARED_CSS;
-
-  function showTrending() {
-    document.getElementById('section-feed').style.display     = 'none';
-    document.getElementById('section-trending').style.display = 'block';
-    loadTrending();
-    window.scrollTo(0,0);
-  }
-  function showFeed() {
-    document.getElementById('section-feed').style.display     = 'block';
-    document.getElementById('section-trending').style.display = 'none';
-    window.scrollTo(0,0);
-  }
-
-  if (window.location.hash === '#trending') showTrending();
-  document.getElementById('nav-trending-btn').addEventListener('click', e => { e.preventDefault(); showTrending(); });
-  document.getElementById('bnav-trending').addEventListener('click',    e => { e.preventDefault(); showTrending(); });
-
   // Pull to refresh on feed
   (function() {
     let startY = 0, pulling = false, triggered = false;
@@ -93,7 +72,7 @@ document.getElementById('page-style').textContent = SHARED_CSS;
       const grid = container.querySelector('.messages-grid');
       data.messages.forEach((msg, i) => grid.innerHTML += renderCard(msg, i, { showReplyThread: true }));
     } catch(e) {
-      container.innerHTML = `<div class="empty-state"><div class="emoji">😵</div><p>Couldn't load messages.</p></div>`;
+      container.innerHTML = `<div class="empty-state"><div class="emoji">😵</div><p>Couldn't load whisprs.</p></div>`;
       console.error(e);
     }
     loadTopMood();
