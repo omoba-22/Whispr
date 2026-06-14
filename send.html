@@ -41,9 +41,24 @@
   </div>
 
   <div id="send-form-area">
-    <div class="form-card" id="recipient-section" style="display:none;margin-bottom:0.8rem;">
+        <div class="form-card" id="recipient-section" style="display:none;margin-bottom:0.8rem;">
       <label class="form-label">Send to (username)</label>
-      <input type="text" id="to-username" placeholder="e.g. josh" />
+      <div style="position:relative;">
+        <input type="text" id="to-username" placeholder="e.g. benedict"
+          oninput="lookupUsername(this.value)" autocomplete="off"/>
+      </div>
+      <div id="username-preview" style="margin-top:0.6rem;display:none;">
+        <div style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;background:rgba(124,58,237,0.08);border:1px solid rgba(124,58,237,0.25);border-radius:10px;">
+          <div style="width:32px;height:32px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-weight:800;font-size:0.85rem;color:white;flex-shrink:0;" id="preview-avatar"></div>
+          <div>
+            <div style="font-size:0.84rem;font-weight:600;" id="preview-name"></div>
+            <div style="font-size:0.7rem;color:var(--muted);">Whispr member · messages are anonymous</div>
+          </div>
+        </div>
+      </div>
+      <div id="username-not-found" style="margin-top:0.5rem;font-size:0.75rem;color:#ef4444;display:none;">
+        ❌ Username not found. Check the spelling.
+      </div>
     </div>
     <div class="form-card">
       <div class="form-group">
@@ -67,14 +82,14 @@
           <div class="toggle-label"><strong>Show on public feed</strong>Still 100% anonymous</div>
         </div>
       </div>
-      <button class="send-btn" id="send-btn" onclick="sendMessage()">Send anonymously ✦</button>
+      <button class="send-btn" id="send-btn" onclick="sendMessage()">Whispr anonymously ✦</button>
     </div>
   </div>
 
   <div id="send-success" style="display:none">
     <div class="success-msg">
       <div class="big-emoji">👻</div>
-      <h3>Message sent!</h3>
+      <h3>Whispr sent!</h3>
       <p>They have no idea who you are. 👀</p><br>
       <button class="btn btn-primary btn-lg" onclick="resetSend()">Send another</button>
     </div>

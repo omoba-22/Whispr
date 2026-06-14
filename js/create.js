@@ -41,7 +41,7 @@ document.getElementById('page-style').textContent = SHARED_CSS;
   function shareLink() {
     const link = document.getElementById('link-display').textContent;
     if (navigator.share) {
-      navigator.share({ title: 'Send me an anonymous message on Whispr', url: link });
+      navigator.share({ title: 'Send me an anonymous message on Whispr', text:  `Send me an anonymous message — I won't know it's you 👀`, url: link });
     } else {
       copyLink();
     }

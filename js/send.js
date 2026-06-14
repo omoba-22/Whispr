@@ -4,11 +4,20 @@ document.getElementById('page-style').textContent = SHARED_CSS;
   const u = new URLSearchParams(window.location.search).get('u');
   if (u) {
     window._recipientUsername = normalize(u);
-    const tag = document.getElementById('send-recipient-tag');
-    tag.style.display = 'inline-flex';
-    tag.textContent = `✉️ Sending to @${window._recipientUsername}`;
+    // Show prominent recipient banner
+    document.getElementById('send-recipient-tag').style.display = 'inline-flex';
+    document.getElementById('send-recipient-tag').textContent   = `✉️ Send a whispr to @${window._recipientUsername}`;
     document.getElementById('send-subtitle').textContent = `@${window._recipientUsername} will never know it was you.`;
-  } else {
+    // Also show the preview card
+    document.getElementById('recipient-section').style.display = 'block';
+    document.getElementById('to-username').value               = window._recipientUsername;
+    document.getElementById('to-username').disabled            = true;
+    document.getElementById('to-username').style.opacity       = '0.5';
+    // Show preview
+    document.getElementById('preview-avatar').textContent = window._recipientUsername[0].toUpperCase();
+    document.getElementById('preview-name').textContent   = `@${window._recipientUsername}`;
+    document.getElementById('username-preview').style.display = 'flex';
+  }else {
     document.getElementById('recipient-section').style.display = 'block';
   }
 
@@ -25,12 +34,14 @@ document.getElementById('page-style').textContent = SHARED_CSS;
 
   async function sendMessage() {
     const text      = document.getElementById('msg-text').value.trim();
-    const toEl      = document.getElementById('to-username');
-    const recipient = window._recipientUsername || normalize(toEl ? toEl.value : '') || null;
+    const recipient = window._recipientUsername || validatedRecipient || null;
 
     if (!text)         return showToast('Write something first 👀');
     if (!selectedMood) return showToast('Pick a vibe first!');
-    if (!recipient)    return showToast('Who are you sending this to?');
+    if (!recipient)    return showToast('Enter a valid username first!');
+    if (!window._recipientUsername && !validatedRecipient) {
+      return showToast('Username not found. Check the spelling!');
+    }
 
     const btn = document.getElementById('send-btn');
     btn.disabled = true; btn.textContent = 'Sending...';
@@ -65,3 +76,43 @@ document.getElementById('page-style').textContent = SHARED_CSS;
   attachScrollNav();
   // Show page after CSS is injected
   document.querySelector('.page-wrap').classList.add('ready');
+
+  let usernameCheckTimer = null;
+  let validatedRecipient = null;
+
+  async function lookupUsername(val) {
+    const username = normalize(val);
+    const preview  = document.getElementById('username-preview');
+    const notFound = document.getElementById('username-not-found');
+    validatedRecipient = null;
+
+    if (!username || username.length < 2) {
+      preview.style.display  = 'none';
+      notFound.style.display = 'none';
+      return;
+    }
+
+    if (usernameCheckTimer) clearTimeout(usernameCheckTimer);
+    usernameCheckTimer = setTimeout(async () => {
+      try {
+        const data = await apiGet(`/api/auth/check/${username}`);
+        if (!data.available) {
+          // Username EXISTS (available: false means it's taken = exists)
+          validatedRecipient = username;
+          document.getElementById('preview-avatar').textContent = username[0].toUpperCase();
+          document.getElementById('preview-name').textContent   = `@${username}`;
+          preview.style.display  = 'flex';
+          notFound.style.display = 'none';
+        } else {
+          // Username doesn't exist
+          validatedRecipient     = null;
+          preview.style.display  = 'none';
+          notFound.style.display = 'block';
+        }
+      } catch(e) {
+        validatedRecipient     = null;
+        preview.style.display  = 'none';
+        notFound.style.display = 'none';
+      }
+    }, 500);
+  }

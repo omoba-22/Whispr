@@ -3,6 +3,7 @@ const router  = express.Router();
 const { supabase } = require('../db');
 const { clean } = require('../middleware/sanitize');
 const { general } = require('../middleware/rateLimit');
+const { trackReply } = require('./challenge');
 
 const FREE_REPLY_LIMIT = 3;
 
@@ -113,6 +114,8 @@ router.post('/send', general, async (req, res) => {
       .update({ reply_text: replyText, is_public: isPublic })
       .eq('id', replyToId);
     if (updErr) throw updErr;
+    // Track for challenge
+    trackReply(username);
 
     // Insert as reply message for feed
     await supabase.from('messages').insert({

@@ -61,7 +61,7 @@ document.getElementById('page-style').textContent = SHARED_CSS;
 
     const container = document.getElementById('inbox-container');
     if (!data.length) {
-      container.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>No messages yet. Share your link!</p></div>`;
+      container.innerHTML = `<div class="empty-state"><div class="emoji">📭</div><p>No whisprs yet. Share your link!</p></div>`;
       return;
     }
     container.innerHTML = '<div class="messages-grid" id="inbox-grid"></div>';

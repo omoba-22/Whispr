@@ -101,22 +101,25 @@ function showToast(msg) {
 }
 
 async function toggleLike(btn, id, currentLikes) {
-  const wasLiked   = isLiked(id);
-  const newVal     = !wasLiked;
-  const optimistic = newVal ? currentLikes + 1 : Math.max(0, currentLikes - 1);
+  // Optimistic UI
+  const wasLiked = isLiked(id);
+  const newVal   = !wasLiked;
   btn.classList.toggle('liked', newVal);
-  btn.querySelector('.like-count').textContent = optimistic;
-  setLiked(id, newVal);
+  btn.querySelector('.like-count').textContent = newVal
+    ? currentLikes + 1
+    : Math.max(0, currentLikes - 1);
+
   try {
     const result = await apiPost(`/api/messages/like/${id}`, {});
+    // Always use server's actual count — source of truth
     btn.querySelector('.like-count').textContent = result.likes;
     btn.setAttribute('onclick', `toggleLike(this,'${id}',${result.likes})`);
     setLiked(id, result.action === 'liked');
     btn.classList.toggle('liked', result.action === 'liked');
   } catch(e) {
+    // Revert
     btn.classList.toggle('liked', wasLiked);
     btn.querySelector('.like-count').textContent = currentLikes;
-    setLiked(id, wasLiked);
     showToast('Could not like. Try again.');
   }
 }

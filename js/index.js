@@ -86,7 +86,7 @@ document.getElementById('page-style').textContent = SHARED_CSS;
       if (currentFilter !== 'all') path += `&mood=${encodeURIComponent(currentFilter)}`;
       const data = await apiGet(path);
       if (!data.messages.length) {
-        container.innerHTML = `<div class="empty-state"><div class="emoji">👻</div><p>No messages in the last 72h. Be the first.</p></div>`;
+        container.innerHTML = `<div class="empty-state"><div class="emoji">👻</div><p>No whisprs yet. Drop the first one.</p></div>`;
         return;
       }
       container.innerHTML = '<div class="messages-grid"></div>';

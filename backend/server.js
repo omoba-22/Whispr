@@ -10,6 +10,7 @@ const authRoutes     = require('./routes/auth');
 const messageRoutes  = require('./routes/messages');
 const replyRoutes    = require('./routes/replies');
 const paymentRoutes = require('./routes/payment');
+const challengeRoutes = require('./routes/challenge');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -62,6 +63,7 @@ app.use('/api/', general);
 app.use('/api/auth',     authRoutes);
 app.use('/api/messages', messageRoutes);
 app.use('/api/replies',  replyRoutes);
+app.use('/api/challenge', challengeRoutes);
 
 // add this right after the existing app.use routes
 app.use('/api/payment', paymentRoutes);

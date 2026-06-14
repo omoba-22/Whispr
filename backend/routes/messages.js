@@ -3,6 +3,7 @@ const router  = express.Router();
 const { supabase } = require('../db');
 const { clean, normalize, requireFields } = require('../middleware/sanitize');
 const { send, like, general } = require('../middleware/rateLimit');
+const { trackMessageReceived, trackPostLiked, trackUnliked } = require('./challenge');
 
 const VALID_MOODS = ['😤 Vent', '💀 No Cap', '🥺 Feels', '🔥 Hot Take', '👀 Tea'];
 
@@ -16,6 +17,9 @@ router.post('/send', send, requireFields('message', 'mood'), async (req, res) =>
     const recipient = req.body.recipient_username
       ? normalize(req.body.recipient_username) : null;
     const isPublic  = req.body.is_public !== false; // default true
+    // Track for challenge
+    const senderIP = req.ip || req.connection.remoteAddress;
+    trackMessageReceived(recipient, message, senderIP);
 
     // Validate
     if (message.length < 1 || message.length > 300) {
@@ -232,6 +236,15 @@ router.post('/like/:id', like, async (req, res) => {
     }
 
     await supabase.from('messages').update({ likes: newLikes }).eq('id', id);
+    // Track like/unlike for challenge
+    const { verifySession } = require('./auth');
+    const likeToken    = (req.headers.authorization || '').replace('Bearer ', '');
+    const likeUsername = verifySession(likeToken);
+    if (likeUsername) {
+      if (action === 'liked')   trackPostLiked(likeUsername);
+      if (action === 'unliked') trackUnliked(likeUsername);
+    }
+
     return res.json({ ok: true, likes: newLikes, action });
 
   } catch(err) {
